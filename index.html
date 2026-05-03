@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dashboard Statistik Pendidikan Jawa Tengah</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#bdf1ef;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:#87a2ce;min-height:100vh;}
+
+@keyframes fadeUp  {from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes popIn   {from{opacity:0;transform:scale(.86)}to{opacity:1;transform:scale(1)}}
+@keyframes float   {0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-10px) rotate(3deg)}}
+.fade-up{animation:fadeUp .5s ease both;}
+.pop-in {animation:popIn .5s cubic-bezier(.34,1.56,.64,1) both;}
+.d1{animation-delay:.06s}.d2{animation-delay:.12s}.d3{animation-delay:.18s}
+.d4{animation-delay:.24s}.d5{animation-delay:.32s}.d6{animation-delay:.40s}.d7{animation-delay:.50s}
+
+/* Header */
+.hdr{background:linear-gradient(135deg,#060d1f 0%,#0f2545 50%,#1a3d72 100%);position:relative;overflow:hidden;}
+.hdr::after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 60% 80% at 85% 40%,rgba(59,130,246,.22) 0%,transparent 65%);}
+.dot-bg{position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle,rgba(255,255,255,.06) 1px,transparent 1px);background-size:26px 26px;}
+
+/* Filter bar */
+.fbar{background:white;border-bottom:2px solid #e2e8f0;position:sticky;top:0;z-index:40;box-shadow:0 2px 14px rgba(0,0,0,.07);}
+.fbtn{display:inline-flex;align-items:center;gap:6px;padding:7px 18px;border-radius:99px;border:2px solid #e2e8f0;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;background:white;color:#475569;font-family:'DM Sans',sans-serif;white-space:nowrap;}
+.fbtn:hover{border-color:#94a3b8;color:#1e293b;}
+.fbtn.on{border-color:transparent;color:white;box-shadow:0 4px 14px rgba(0,0,0,.2);}
+.smp.on{background:linear-gradient(135deg,#f3f717,#ff951b);}
+.sma.on{background:linear-gradient(135deg,#ffb8a6,#df2b2b);}
+.sd.on{background:linear-gradient(135deg,#d81dd8,#f1c1dd);}
+.ysel{padding:7px 30px 7px 12px;border-radius:12px;border:2px solid #e2e8f0;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;background:white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;color:#1e293b;cursor:pointer;outline:none;appearance:none;transition:border-color .2s;}
+.ysel:focus{border-color:#3b82f6;}
+
+/* KPI cards */
+.kcard{border-radius:22px;padding:20px 18px 14px 20px;position:relative;overflow:hidden;box-shadow:0 6px 28px rgba(0,0,0,.13);transition:transform .22s,box-shadow .22s;}
+.kcard:hover{transform:translateY(-5px);box-shadow:0 14px 36px rgba(0,0,0,.2);}
+.kcard .blob{position:absolute;right:-22px;top:-22px;width:120px;height:120px;border-radius:50%;opacity:.15;}
+.kcard .illus{position:absolute;right:10px;bottom:6px;width:74px;height:74px;animation:float 4s ease-in-out infinite;filter:drop-shadow(0 4px 10px rgba(0,0,0,.18));}
+.cb{background:linear-gradient(140deg,#1d4ed8 0%,#2563eb 60%,#38bdf8 100%);}
+.cv{background:linear-gradient(140deg,#6d28d9 0%,#7c3aed 60%,#c084fc 100%);}
+.cr{background:linear-gradient(140deg,#be185d 0%,#e11d48 60%,#fb7185 100%);}
+.ca{background:linear-gradient(140deg,#b45309 0%,#d97706 60%,#fbbf24 100%);}
+.klabel{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.78;color:white;}
+.kval{font-family:'Sora',sans-serif;font-size:1.9rem;font-weight:800;line-height:1.1;margin:7px 0 5px;color:white;}
+.ksub{font-size:11px;color:rgba(255,255,255,.72);}
+
+/* Chart cards */
+.ccard{background:white;border-radius:20px;box-shadow:0 2px 18px rgba(0,0,0,.07);padding:22px;}
+.ctitle{font-family:'Sora',sans-serif;font-weight:700;font-size:15px;color:#1e293b;}
+.csub{font-size:11.5px;color:#94a3b8;margin-top:2px;}
+
+/* Table */
+.tscroll{max-height:400px;overflow-y:auto;border-radius:14px;border:1px solid #e2e8f0;}
+.tscroll::-webkit-scrollbar{width:5px;}
+.tscroll::-webkit-scrollbar-track{background:#f8fafc;}
+.tscroll::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px;}
+thead th{position:sticky;top:0;z-index:5;}
+.drow:hover{background:#f0f7ff;}
+
+/* Chips */
+.chip{display:inline-flex;align-items:center;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:600;}
+.tsma{background:#dbeafe;color:#1d4ed8;}
+.tsmp{background:#cffafe;color:#0e7490;}
+.tsd{background:#dbeafe;color:#1d4ed8;}
+.treal{background:#dcfce7;color:#15803d;}
+.tsim{background:#fef9c3;color:#a16207;}
+
+/* Level pill */
+.lpill{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:99px;font-size:12px;font-weight:700;background:rgba(255,255,255,.14);backdrop-filter:blur(6px);color:white;border:1.5px solid rgba(255,255,255,.22);}
+.sbox{border:2px solid #e2e8f0;border-radius:12px;padding:8px 12px 8px 36px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:210px;transition:border-color .2s;}
+.sbox:focus{border-color:#3b82f6;}
+
+/* Segmented toggle for chart type */
+.seg{display:inline-flex;background:#f1f5f9;border-radius:12px;padding:3px;gap:2px;}
+.segs{padding:5px 12px;border-radius:9px;font-size:12px;font-weight:600;cursor:pointer;color:#64748b;transition:all .2s;border:none;background:transparent;font-family:'DM Sans',sans-serif;}
+.segs.on{background:white;color:#1e293b;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+
+/* Clickable table rows */
+.drow{cursor:pointer;}
+.drow.selected{background:#eff6ff !important;outline:2px solid #3b82f6;outline-offset:-2px;}
+.drow td:first-child{position:relative;padding-left:36px !important;}
+.drow td:first-child::before{content:'▶';position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:8px;color:#cbd5e1;transition:color .2s;}
+.drow.selected td:first-child::before{color:#3b82f6;}
+.drow:hover td:first-child::before{color:#94a3b8;}
+
+/* Ratio panel */
+@keyframes slideDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+.ratio-panel{animation:slideDown .35s ease both;}
+
+/* Status badges */
+.rbadge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:700;}
+.rbadge.ok    {background:#dcfce7;color:#15803d;}
+.rbadge.warn  {background:#fef9c3;color:#a16207;}
+.rbadge.danger{background:#fee2e2;color:#b91c1c;}
+
+/* Mini stat boxes inside ratio panel */
+.mstat{background:#f8fafc;border-radius:14px;padding:12px 16px;border:1.5px solid #e2e8f0;flex:1;}
+.mstat-val{font-family:'Sora',sans-serif;font-size:1.35rem;font-weight:800;color:#1e293b;}
+.mstat-lbl{font-size:10.5px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-top:3px;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr text-white">
+  <div class="dot-bg"></div>
+  <div class="relative z-10 max-w-7xl mx-auto px-5 py-7 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div class="flex items-center gap-4 fade-up">
+      <div style="background:rgba(255,255,255,.12);backdrop-filter:blur(10px);" class="rounded-2xl p-3 flex-shrink-0">
+        <svg width="40" height="40" viewBox="0 0 44 44" fill="none">
+          <circle cx="22" cy="22" r="22" fill="rgba(59,130,246,.22)"/>
+          <path d="M22 9L36 17L22 25L8 17Z" fill="#93c5fd" stroke="#bfdbfe" stroke-width="1.2"/>
+          <path d="M12 20v8c0 0 4 5 10 5s10-5 10-5v-8" stroke="#bfdbfe" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <line x1="36" y1="17" x2="36" y2="27" stroke="#bfdbfe" stroke-width="2.2" stroke-linecap="round"/>
+          <circle cx="36" cy="28.5" r="2.2" fill="#fbbf24"/>
+        </svg>
+      </div>
+      <div>
+        <h1 style="font-family:'Sora',sans-serif;" class="font-extrabold text-[1.6rem] tracking-tight leading-snug">Dashboard Statistik Pendidikan</h1>
+        <p class="text-blue-200 text-sm mt-0.5 font-medium">Provinsi Jawa Tengah &nbsp;·&nbsp; SD, SMP &amp; SMA</p>
+      </div>
+    </div>
+    <div class="flex flex-wrap items-center gap-2 fade-up d2">
+      <div class="lpill"><span id="indDot" class="w-2 h-2 rounded-full bg-blue-300 flex-shrink-0"></span><span id="indTxt">SMA · 2023/2024</span></div>
+      <div style="background:rgba(255,255,255,.1);backdrop-filter:blur(6px);border:1.5px solid rgba(255,255,255,.18);" class="rounded-xl px-3 py-2 text-xs text-blue-200 font-semibold">35 Kab/Kota</div>
+    </div>
+  </div>
+</header>
+
+<!-- FILTER BAR -->
+<div class="fbar">
+  <div class="max-w-7xl mx-auto px-5 py-3 flex flex-wrap items-center gap-3">
+    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Tingkat:</span>
+    <button class="fbtn sma on" onclick="setLevel('SMA',this)">
+      <svg width="13" height="13" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 2L17 7L9 12L1 7Z"/><path d="M3 9.5V14c0 0 2.5 2.5 6 2.5S15 14 15 14V9.5"/></svg>SMA
+    </button>
+    <button class="fbtn smp" onclick="setLevel('SMP',this)">
+      <svg width="13" height="13" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 2L17 7L9 12L1 7Z"/><path d="M3 9.5V14c0 0 2.5 2.5 6 2.5S15 14 15 14V9.5"/></svg>SMP
+    </button>
+    <button class="fbtn sd" onclick="setLevel('SD',this)">
+      <svg width="13" height="13" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 2L17 7L9 12L1 7Z"/><path d="M3 9.5V14c0 0 2.5 2.5 6 2.5S15 14 15 14V9.5"/></svg>SD
+    </button>
+    <div class="w-px h-6 bg-slate-200"></div>
+    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Tahun:</span>
+    <select id="yrSel" class="ysel" onchange="setYear(this.value)">
+      <option value="2024">2023/2024</option>
+      <option value="2024">2024/2025</option>
+      <option value="2025">2025/2026</option>
+    </select>
+    <span id="noteChip" class="chip treal ml-auto">Data riil dari CSV</span>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main class="max-w-7xl mx-auto px-4 md:px-5 py-7 space-y-7">
+
+  <!-- KPI -->
+  <section class="grid grid-cols-2 xl:grid-cols-4 gap-4">
+    <div class="kcard cb pop-in d1">
+      <div class="blob" style="background:#93c5fd"></div>
+      <p class="klabel">Total Sekolah</p>
+      <p class="kval" id="kSek">—</p>
+      <p class="ksub" id="kSekSub">—</p>
+      <svg class="illus" viewBox="0 0 80 80" fill="none">
+        <circle cx="40" cy="40" r="36" fill="rgba(255,255,255,.1)"/>
+        <rect x="14" y="38" width="52" height="30" rx="3" fill="rgba(255,255,255,.22)" stroke="rgba(255,255,255,.55)" stroke-width="1.5"/>
+        <path d="M40 16L64 34H16Z" fill="rgba(255,255,255,.35)" stroke="rgba(255,255,255,.65)" stroke-width="1.2"/>
+        <rect x="26" y="48" width="11" height="20" rx="2" fill="rgba(255,255,255,.28)"/>
+        <rect x="43" y="48" width="11" height="20" rx="2" fill="rgba(255,255,255,.28)"/>
+        <rect x="29" y="51" width="4" height="4" rx="1" fill="rgba(255,255,255,.65)"/>
+        <rect x="46" y="51" width="4" height="4" rx="1" fill="rgba(255,255,255,.65)"/>
+        <circle cx="40" cy="27" r="3.5" fill="rgba(251,191,36,.9)"/>
+        <line x1="40" y1="16" x2="40" y2="11" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/>
+        <circle cx="40" cy="10" r="2" fill="rgba(251,191,36,.8)"/>
+      </svg>
+    </div>
+    <div class="kcard cv pop-in d2">
+      <div class="blob" style="background:#ddd6fe"></div>
+      <p class="klabel">Total Guru</p>
+      <p class="kval" id="kGuru">—</p>
+      <p class="ksub" id="kGuruSub">—</p>
+      <svg class="illus" viewBox="0 0 80 80" fill="none">
+        <circle cx="40" cy="40" r="36" fill="rgba(255,255,255,.08)"/>
+        <rect x="10" y="20" width="46" height="32" rx="3" fill="rgba(255,255,255,.18)" stroke="rgba(255,255,255,.5)" stroke-width="1.4"/>
+        <line x1="18" y1="29" x2="46" y2="29" stroke="rgba(255,255,255,.62)" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="18" y1="36" x2="40" y2="36" stroke="rgba(255,255,255,.45)" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="18" y1="43" x2="33" y2="43" stroke="rgba(255,255,255,.35)" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="62" cy="31" r="6" fill="rgba(255,255,255,.38)" stroke="rgba(255,255,255,.65)" stroke-width="1.3"/>
+        <path d="M56 47c0-3.5 2.5-6 6-6s6 2.5 6 6" stroke="rgba(255,255,255,.55)" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        <line x1="55" y1="35" x2="46" y2="33" stroke="rgba(255,255,255,.48)" stroke-width="1.3" stroke-linecap="round"/>
+        <path d="M20 55l2 4 4.5.7-3.2 3.1.8 4.5-4-2.1-4 2.1.8-4.5-3.2-3.1 4.5-.7z" fill="rgba(251,191,36,.85)"/>
+      </svg>
+    </div>
+    <div class="kcard cr pop-in d3">
+      <div class="blob" style="background:#fecdd3"></div>
+      <p class="klabel">Total Murid</p>
+      <p class="kval" id="kMurid">—</p>
+      <p class="ksub" id="kMuridSub">—</p>
+      <svg class="illus" viewBox="0 0 80 80" fill="none">
+        <circle cx="40" cy="40" r="36" fill="rgba(255,255,255,.08)"/>
+        <circle cx="24" cy="26" r="8" fill="rgba(255,255,255,.3)" stroke="rgba(255,255,255,.58)" stroke-width="1.3"/>
+        <path d="M10 52c0-8 6.5-12 14-12s14 4 14 12" fill="rgba(255,255,255,.18)" stroke="rgba(255,255,255,.42)" stroke-width="1.2"/>
+        <circle cx="54" cy="24" r="6.5" fill="rgba(255,255,255,.2)" stroke="rgba(255,255,255,.4)" stroke-width="1"/>
+        <path d="M42 48c0-6 5-9.5 12-9.5s12 3.5 12 9.5" fill="rgba(255,255,255,.1)" stroke="rgba(255,255,255,.3)" stroke-width="1"/>
+        <rect x="22" y="58" width="20" height="13" rx="2" fill="rgba(255,255,255,.28)" stroke="rgba(255,255,255,.5)" stroke-width="1.2"/>
+        <line x1="32" y1="58" x2="32" y2="71" stroke="rgba(255,255,255,.45)" stroke-width="1"/>
+        <path d="M24 18l8 2.5-8 2.5-8-2.5z" fill="rgba(251,191,36,.85)"/>
+        <line x1="32" y1="20.5" x2="32" y2="26" stroke="rgba(251,191,36,.7)" stroke-width="1.3"/>
+        <circle cx="32" cy="27" r="1.5" fill="rgba(251,191,36,.8)"/>
+      </svg>
+    </div>
+    <div class="kcard ca pop-in d4">
+      <div class="blob" style="background:#fde68a"></div>
+      <p class="klabel">Rasio Murid/Guru</p>
+      <p class="kval" id="kRasio">—</p>
+      <p class="ksub" id="kRasioSub">—</p>
+      <svg class="illus" viewBox="0 0 80 80" fill="none">
+        <circle cx="40" cy="40" r="36" fill="rgba(255,255,255,.08)"/>
+        <rect x="11" y="52" width="9" height="14" rx="2.5" fill="rgba(255,255,255,.28)" stroke="rgba(255,255,255,.5)" stroke-width="1"/>
+        <rect x="24" y="42" width="9" height="24" rx="2.5" fill="rgba(255,255,255,.38)" stroke="rgba(255,255,255,.58)" stroke-width="1"/>
+        <rect x="37" y="30" width="9" height="36" rx="2.5" fill="rgba(255,255,255,.52)" stroke="rgba(255,255,255,.7)" stroke-width="1"/>
+                <rect x="50" y="18" width="9" height="48" rx="2.5" fill="rgba(255,255,255,.72)" stroke="rgba(255,255,255,.88)" stroke-width="1"/>
+        <line x1="8" y1="66" x2="62" y2="66" stroke="rgba(255,255,255,.4)" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M15 52L28 41L42 30L55 18" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="4 2.5" opacity=".72"/>
+        <circle cx="55" cy="18" r="3.5" fill="white" opacity=".9"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- TOP 10 + DONUT -->
+  <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 fade-up d5">
+
+    <!-- Top 10 stacked bar -->
+    <div class="ccard lg:col-span-2">
+      <div class="flex flex-wrap items-start justify-between gap-3 mb-5">
+        <div>
+          <p class="ctitle">Top 10 Kabupaten/Kota — Jumlah Murid</p>
+          <p class="csub">Total murid terbanyak, dibagi negeri &amp; swasta</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span id="barTag" class="chip tsma">SMA</span>
+          <!-- toggle stacked vs grouped -->
+          <div class="seg">
+            <button class="segs on" id="btnStk" onclick="setBarMode('stacked',this)">Stacked</button>
+            <button class="segs" id="btnGrp" onclick="setBarMode('grouped',this)">Grouped</button>
+          </div>
+        </div>
+      </div>
+      <div style="position:relative;height:300px;"><canvas id="barChart"></canvas></div>
+    </div>
+
+    <!-- Donut negeri vs swasta -->
+    <div class="ccard flex flex-col">
+      <div class="mb-3">
+        <p class="ctitle">Proporsi Sekolah</p>
+        <p class="csub">Negeri vs Swasta se-Jawa Tengah</p>
+      </div>
+      <div style="position:relative;height:240px;" class="flex-1"><canvas id="donutChart"></canvas></div>
+      <div class="mt-4 flex justify-center gap-5" id="donutLeg"></div>
+    </div>
+  </section>
+
+  <!-- TREND CHART -->
+  <section class="ccard fade-up d6">
+    <div class="flex flex-wrap items-start justify-between gap-3 mb-5">
+      <div>
+        <p class="ctitle">Tren Jumlah Sekolah, Guru &amp; Murid (2024–2025)</p>
+        <p class="csub">Perbandingan antar tahun ajaran berdasarkan data riil</p>
+      </div>
+      <div class="seg">
+        <button class="segs on" id="tAll"  onclick="setTrend('all',this)">Semua</button>
+        <button class="segs"    id="tSek"  onclick="setTrend('sek',this)">Sekolah</button>
+        <button class="segs"    id="tGuru" onclick="setTrend('guru',this)">Guru</button>
+        <button class="segs"    id="tMrd"  onclick="setTrend('murid',this)">Murid</button>
+      </div>
+    </div>
+    <div style="position:relative;height:280px;"><canvas id="trendChart"></canvas></div>
+  </section>
+
+  <!-- RATIO PANEL -->
+  <section id="ratioSection" class="ccard" style="display:none;">
+    <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-5">
+      <div class="min-w-0">
+        <div class="flex flex-wrap items-center gap-3 mb-1">
+          <p class="ctitle" id="ratioTitle">Rasio Murid/Guru</p>
+          <span id="ratioBadge" class="rbadge ok">✓ Ideal</span>
+        </div>
+        <p class="csub">Garis kuning = rasio aktual tiap tahun · Garis merah putus-putus = batas ideal 1:20</p>
+      </div>
+      <div class="flex gap-2 flex-wrap flex-shrink-0">
+        <div class="mstat text-center" style="min-width:80px;">
+          <div class="mstat-val text-violet-600" id="rsGuru">—</div>
+          <div class="mstat-lbl">Guru</div>
+        </div>
+        <div class="mstat text-center" style="min-width:80px;">
+          <div class="mstat-val text-rose-500" id="rsMurid">—</div>
+          <div class="mstat-lbl">Murid</div>
+        </div>
+        <div class="mstat text-center" style="min-width:80px;">
+          <div class="mstat-val" id="rsRasio" style="color:#f59e0b;">—</div>
+          <div class="mstat-lbl">Rasio aktual</div>
+        </div>
+        <div class="mstat text-center" style="min-width:80px;">
+          <div class="mstat-val" style="color:#ef4444;">1 : 20</div>
+          <div class="mstat-lbl">Batas ideal</div>
+        </div>
+      </div>
+    </div>
+    <div style="position:relative;height:260px;"><canvas id="ratioChart"></canvas></div>
+    <div class="mt-4 flex flex-wrap gap-4 text-xs text-slate-500">
+      <span> <strong>Cara baca:</strong> Titik <span style="color:#f59e0b;font-weight:700;">kuning di atas garis merah</span> = kekurangan guru (rasio &gt; 1:20 artinya 1 guru mengajar lebih dari 20 murid).</span>
+      <span>Titik <span style="color:#22c55e;font-weight:700;">di bawah garis merah</span> = kondisi lebih baik dari ideal.</span>
+      <span class="text-slate-400">Klik kabupaten lain di tabel untuk membandingkan.</span>
+    </div>
+  </section>
+
+  <!-- TABLE -->
+  <section class="ccard fade-up d7">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+      <div>
+        <p class="ctitle">Data Lengkap per Kabupaten/Kota</p>
+        <p class="csub">Klik nama daerah untuk melihat grafik rasio · Klik header kolom untuk sort</p>
+      </div>
+      <div class="relative flex-shrink-0">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0118 0z"/></svg>
+        <input id="srch" type="text" placeholder="Cari kabupaten…" class="sbox"/>
+      </div>
+    </div>
+    <div class="tscroll">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-xs uppercase tracking-wide text-white">
+            <th class="text-left px-4 py-3 cursor-pointer select-none" onclick="srt('kab')" style="background:#1e293b;border-radius:10px 0 0 0">Kabupaten/Kota ↕</th>
+            <th class="text-right px-3 py-3 cursor-pointer select-none" onclick="srt('negeri')" style="background:#1e293b">Negeri ↕</th>
+            <th class="text-right px-3 py-3 cursor-pointer select-none" onclick="srt('swasta')" style="background:#1e293b">Swasta ↕</th>
+            <th class="text-right px-3 py-3 cursor-pointer select-none" onclick="srt('total')" style="background:#1e293b">Total Sek ↕</th>
+            <th class="text-right px-3 py-3 cursor-pointer select-none" onclick="srt('guru')" style="background:#1e293b">Guru ↕</th>
+            <th class="text-right px-3 py-3 cursor-pointer select-none" onclick="srt('mN')" style="background:#1e293b">Murid Neg ↕</th>
+            <th class="text-right px-3 py-3 cursor-pointer select-none" onclick="srt('mS')" style="background:#1e293b">Murid Sw ↕</th>
+            <th class="text-right px-3 py-3 cursor-pointer select-none" onclick="srt('mT')" style="background:#1e293b;border-radius:0 10px 0 0">Total Murid ↕</th>
+          </tr>
+        </thead>
+        <tbody id="tBody"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<footer class="max-w-7xl mx-auto px-5 pb-8 text-center text-xs text-slate-400 mt-2">
+  Sumber: Kemdikbud / Kemendikdasmen RI · Jawa Tengah 2023–2025 · Dashboard v3.0
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// DATA RIIL — langsung dari CSV
+// ═══════════════════════════════════════════════════════
+const DB = {
+  SMA: {
+    2023: [
+      {kab:"Cilacap",         n:18,s:24,t:42,g:1095,mN:15340,mS:4016, mT:19356},
+      {kab:"Banyumas",        n:14,s:24,t:38,g:1211,mN:15561,mS:5684, mT:21245},
+      {kab:"Purbalingga",     n:10,s:6, t:16,g:579, mN:9198, mS:2587, mT:11785},
+      {kab:"Banjarnegara",    n:8, s:4, t:12,g:427, mN:7384, mS:888,  mT:8272 },
+      {kab:"Kebumen",         n:14,s:9, t:23,g:691, mN:12038,mS:1324, mT:13362},
+      {kab:"Purworejo",       n:11,s:12,t:23,g:587, mN:8497, mS:812,  mT:9309 },
+      {kab:"Wonosobo",        n:9, s:8, t:17,g:529, mN:6680, mS:3175, mT:9855 },
+      {kab:"Magelang",        n:10,s:27,t:37,g:950, mN:9373, mS:6395, mT:15768},
+      {kab:"Boyolali",        n:15,s:15,t:30,g:905, mN:12865,mS:2943, mT:15808},
+      {kab:"Klaten",          n:15,s:8, t:23,g:918, mN:14833,mS:2447, mT:17280},
+      {kab:"Sukoharjo",       n:10,s:18,t:28,g:930, mN:9873, mS:5529, mT:15402},
+      {kab:"Wonogiri",        n:13,s:8, t:21,g:727, mN:10666,mS:737,  mT:11403},
+      {kab:"Karanganyar",     n:10,s:8, t:18,g:673, mN:9641, mS:1741, mT:11382},
+      {kab:"Sragen",          n:10,s:14,t:24,g:688, mN:9088, mS:2357, mT:11445},
+      {kab:"Grobogan",        n:11,s:23,t:34,g:902, mN:11238,mS:6937, mT:18175},
+      {kab:"Blora",           n:8, s:16,t:24,g:600, mN:7748, mS:1825, mT:9573 },
+      {kab:"Rembang",         n:9, s:6, t:15,g:519, mN:8537, mS:334,  mT:8871 },
+      {kab:"Pati",            n:8, s:21,t:29,g:911, mN:9808, mS:5165, mT:14973},
+      {kab:"Kudus",           n:7, s:10,t:17,g:626, mN:8137, mS:2455, mT:10592},
+      {kab:"Jepara",          n:10,s:13,t:23,g:754, mN:10155,mS:3774, mT:13929},
+      {kab:"Demak",           n:12,s:20,t:32,g:959, mN:12566,mS:3805, mT:16371},
+      {kab:"Semarang",        n:11,s:15,t:26,g:731, mN:10105,mS:3931, mT:14036},
+      {kab:"Temanggung",      n:6, s:11,t:17,g:401, mN:5584, mS:1774, mT:7358 },
+      {kab:"Kendal",          n:14,s:20,t:34,g:853, mN:11415,mS:3129, mT:14544},
+      {kab:"Batang",          n:7, s:9, t:16,g:421, mN:5635, mS:1040, mT:6675 },
+      {kab:"Pekalongan",      n:11,s:6, t:17,g:560, mN:8124, mS:1299, mT:9423 },
+      {kab:"Pemalang",        n:11,s:11,t:22,g:787, mN:11539,mS:1638, mT:13177},
+      {kab:"Tegal",           n:11,s:15,t:26,g:677, mN:10009,mS:1939, mT:11948},
+      {kab:"Brebes",          n:17,s:16,t:33,g:1157,mN:17199,mS:3484, mT:20683},
+      {kab:"Kota Magelang",   n:5, s:8, t:13,g:387, mN:4775, mS:969,  mT:5744 },
+      {kab:"Kota Surakarta",  n:9, s:24,t:33,g:1161,mN:9237, mS:10215,mT:19452},
+      {kab:"Kota Salatiga",   n:3, s:5, t:8, g:305, mN:3606, mS:1066, mT:4672 },
+      {kab:"Kota Semarang",   n:16,s:54,t:70,g:1874,mN:18216,mS:12719,mT:30935},
+      {kab:"Kota Pekalongan", n:4, s:6, t:10,g:262, mN:3420, mS:530,  mT:3950 },
+      {kab:"Kota Tegal",      n:5, s:5, t:10,g:378, mN:4945, mS:1256, mT:6201 },
+    ],
+    2024: [
+      {kab:"Cilacap",         n:18,s:24,t:42,g:1105,mN:15606,mS:4316, mT:19922},
+      {kab:"Banyumas",        n:14,s:24,t:38,g:1194,mN:15582,mS:5970, mT:21552},
+      {kab:"Purbalingga",     n:10,s:6, t:16,g:583, mN:9238, mS:3034, mT:12272},
+      {kab:"Banjarnegara",    n:8, s:4, t:12,g:421, mN:7474, mS:1021, mT:8495 },
+      {kab:"Kebumen",         n:14,s:9, t:23,g:690, mN:12476,mS:1359, mT:13835},
+      {kab:"Purworejo",       n:11,s:12,t:23,g:563, mN:8698, mS:837,  mT:9535 },
+      {kab:"Wonosobo",        n:9, s:8, t:17,g:532, mN:7051, mS:3438, mT:10489},
+      {kab:"Magelang",        n:10,s:27,t:37,g:973, mN:9467, mS:6681, mT:16148},
+      {kab:"Boyolali",        n:15,s:15,t:30,g:908, mN:13140,mS:3107, mT:16247},
+      {kab:"Klaten",          n:15,s:9, t:24,g:908, mN:14851,mS:2484, mT:17335},
+      {kab:"Sukoharjo",       n:10,s:18,t:28,g:946, mN:9861, mS:5778, mT:15639},
+      {kab:"Wonogiri",        n:13,s:8, t:21,g:721, mN:10949,mS:743,  mT:11692},
+      {kab:"Karanganyar",     n:10,s:8, t:18,g:681, mN:9742, mS:2022, mT:11764},
+      {kab:"Sragen",          n:10,s:14,t:24,g:673, mN:9295, mS:2677, mT:11972},
+      {kab:"Grobogan",        n:11,s:23,t:34,g:921, mN:11466,mS:7095, mT:18561},
+      {kab:"Blora",           n:8, s:16,t:24,g:605, mN:7853, mS:1868, mT:9721 },
+      {kab:"Rembang",         n:9, s:6, t:15,g:522, mN:8627, mS:362,  mT:8989 },
+      {kab:"Pati",            n:8, s:22,t:30,g:937, mN:9783, mS:5568, mT:15351},
+      {kab:"Kudus",           n:7, s:10,t:17,g:621, mN:8128, mS:2630, mT:10758},
+      {kab:"Jepara",          n:10,s:14,t:24,g:796, mN:10460,mS:4266, mT:14726},
+      {kab:"Demak",           n:12,s:20,t:32,g:966, mN:12796,mS:3879, mT:16675},
+      {kab:"Semarang",        n:11,s:16,t:27,g:743, mN:10264,mS:4154, mT:14418},
+      {kab:"Temanggung",      n:6, s:11,t:17,g:404, mN:5591, mS:2040, mT:7631 },
+      {kab:"Kendal",          n:14,s:20,t:34,g:823, mN:11732,mS:3264, mT:14996},
+      {kab:"Batang",          n:7, s:9, t:16,g:413, mN:5657, mS:1028, mT:6685 },
+      {kab:"Pekalongan",      n:11,s:6, t:17,g:556, mN:8272, mS:1206, mT:9478 },
+      {kab:"Pemalang",        n:11,s:11,t:22,g:792, mN:11549,mS:1694, mT:13243},
+      {kab:"Tegal",           n:11,s:16,t:27,g:689, mN:10038,mS:2003, mT:12041},
+      {kab:"Brebes",          n:17,s:16,t:33,g:1170,mN:17350,mS:3600, mT:20950},
+      {kab:"Kota Magelang",   n:5, s:8, t:13,g:365, mN:4796, mS:1003, mT:5799 },
+      {kab:"Kota Surakarta",  n:9, s:23,t:32,g:1109,mN:9478, mS:10736,mT:20214},
+      {kab:"Kota Salatiga",   n:3, s:5, t:8, g:294, mN:3664, mS:1222, mT:4886 },
+      {kab:"Kota Semarang",   n:16,s:56,t:72,g:1841,mN:18304,mS:12985,mT:31289},
+      {kab:"Kota Pekalongan", n:4, s:7, t:11,g:265, mN:3401, mS:564,  mT:3965 },
+      {kab:"Kota Tegal",      n:5, s:5, t:10,g:364, mN:4949, mS:1326, mT:6275 },
+    ],
+    2025: [
+      {kab:"Cilacap",         n:18,s:24,t:42,g:1092,mN:15804,mS:4359, mT:20163},
+      {kab:"Banyumas",        n:14,s:24,t:38,g:1230,mN:15614,mS:6167, mT:21781},
+      {kab:"Purbalingga",     n:10,s:6, t:16,g:611, mN:9246, mS:3420, mT:12666},
+      {kab:"Banjarnegara",    n:8, s:4, t:12,g:430, mN:7508, mS:1224, mT:8732 },
+      {kab:"Kebumen",         n:14,s:10,t:24,g:708, mN:12613,mS:1296, mT:13909},
+      {kab:"Purworejo",       n:11,s:12,t:23,g:544, mN:8742, mS:897,  mT:9639 },
+      {kab:"Wonosobo",        n:10,s:9, t:19,g:543, mN:7270, mS:3615, mT:10885},
+      {kab:"Magelang",        n:10,s:28,t:38,g:967, mN:9478, mS:7342, mT:16820},
+      {kab:"Boyolali",        n:15,s:15,t:30,g:909, mN:13123,mS:3212, mT:16335},
+      {kab:"Klaten",          n:15,s:9, t:24,g:880, mN:14793,mS:2487, mT:17280},
+      {kab:"Sukoharjo",       n:10,s:19,t:29,g:957, mN:9849, mS:6138, mT:15987},
+      {kab:"Wonogiri",        n:13,s:8, t:21,g:704, mN:11062,mS:697,  mT:11759},
+      {kab:"Karanganyar",     n:10,s:8, t:18,g:685, mN:9792, mS:2120, mT:11912},
+      {kab:"Sragen",          n:10,s:13,t:23,g:690, mN:9353, mS:2853, mT:12206},
+      {kab:"Grobogan",        n:11,s:23,t:34,g:945, mN:11684,mS:6918, mT:18602},
+      {kab:"Blora",           n:9, s:15,t:24,g:589, mN:8090, mS:1932, mT:10022},
+      {kab:"Rembang",         n:9, s:7, t:16,g:528, mN:8730, mS:427,  mT:9157 },
+      {kab:"Pati",            n:8, s:22,t:30,g:949, mN:9835, mS:5573, mT:15408},
+      {kab:"Kudus",           n:7, s:11,t:18,g:624, mN:8130, mS:2604, mT:10734},
+      {kab:"Jepara",          n:10,s:14,t:24,g:815, mN:10517,mS:4450, mT:14967},
+      {kab:"Demak",           n:12,s:20,t:32,g:975, mN:12840,mS:3671, mT:16511},
+      {kab:"Semarang",        n:11,s:17,t:28,g:752, mN:10323,mS:4270, mT:14593},
+      {kab:"Temanggung",      n:7, s:11,t:18,g:405, mN:5710, mS:2262, mT:7972 },
+      {kab:"Kendal",          n:14,s:20,t:34,g:855, mN:11920,mS:3243, mT:15163},
+      {kab:"Batang",          n:7, s:9, t:16,g:411, mN:5692, mS:1030, mT:6722 },
+      {kab:"Pekalongan",      n:11,s:6, t:17,g:546, mN:8357, mS:1118, mT:9475 },
+      {kab:"Pemalang",        n:11,s:12,t:23,g:798, mN:11631,mS:1737, mT:13368},
+      {kab:"Tegal",           n:11,s:16,t:27,g:704, mN:10044,mS:2093, mT:12137},
+      {kab:"Brebes",          n:17,s:16,t:33,g:1192,mN:17611,mS:3526, mT:21137},
+      {kab:"Kota Magelang",   n:5, s:8, t:13,g:358, mN:4816, mS:988,  mT:5804 },
+      {kab:"Kota Surakarta",  n:9, s:23,t:32,g:1118,mN:9632, mS:10476,mT:20108},
+      {kab:"Kota Salatiga",   n:3, s:5, t:8, g:305, mN:3716, mS:1195, mT:4911 },
+      {kab:"Kota Semarang",   n:16,s:53,t:69,g:1843,mN:18309,mS:12433,mT:30742},
+      {kab:"Kota Pekalongan", n:4, s:7, t:11,g:265, mN:3385, mS:628,  mT:4013 },
+      {kab:"Kota Tegal",      n:5, s:5, t:10,g:366, mN:4989, mS:1296, mT:6285 },
+    ],
+  },
+  SMP: {
+    2023: [
+      {kab:"Cilacap",         n:84,s:109,t:193,g:3875,mN:46238,mS:19210,mT:65448},
+      {kab:"Banyumas",        n:72,s:94, t:166,g:3628,mN:47034,mS:20485,mT:67519},
+      {kab:"Purbalingga",     n:60,s:17, t:77, g:1845,mN:30646,mS:2536, mT:33182},
+      {kab:"Banjarnegara",    n:75,s:25, t:100,g:1681,mN:28019,mS:3261, mT:31280},
+      {kab:"Kebumen",         n:59,s:58, t:117,g:2299,mN:34268,mS:8833, mT:43101},
+      {kab:"Purworejo",       n:43,s:46, t:89, g:1583,mN:22770,mS:4289, mT:27059},
+      {kab:"Wonosobo",        n:72,s:35, t:107,g:1784,mN:21793,mS:7865, mT:29658},
+      {kab:"Magelang",        n:59,s:75, t:134,g:2308,mN:25895,mS:12993,mT:38888},
+      {kab:"Boyolali",        n:52,s:50, t:102,g:1968,mN:27407,mS:6740, mT:34147},
+      {kab:"Klaten",          n:65,s:52, t:117,g:2656,mN:39513,mS:7393, mT:46906},
+      {kab:"Sukoharjo",       n:41,s:37, t:78, g:1965,mN:25599,mS:6397, mT:31996},
+      {kab:"Wonogiri",        n:78,s:38, t:116,g:2093,mN:31504,mS:3579, mT:35083},
+      {kab:"Karanganyar",     n:51,s:34, t:85, g:2000,mN:26465,mS:6124, mT:32589},
+      {kab:"Sragen",          n:49,s:43, t:92, g:2015,mN:26953,mS:7654, mT:34607},
+      {kab:"Grobogan",        n:73,s:64, t:137,g:2356,mN:33112,mS:8898, mT:42010},
+      {kab:"Blora",           n:56,s:46, t:102,g:1662,mN:24405,mS:3713, mT:28118},
+      {kab:"Rembang",         n:39,s:21, t:60, g:1254,mN:16151,mS:2106, mT:18257},
+      {kab:"Pati",            n:58,s:39, t:97, g:2241,mN:29017,mS:4421, mT:33438},
+      {kab:"Kudus",           n:27,s:25, t:52, g:1295,mN:19125,mS:4266, mT:23391},
+      {kab:"Jepara",          n:39,s:60, t:99, g:1917,mN:21992,mS:8934, mT:30926},
+      {kab:"Demak",           n:38,s:47, t:85, g:1565,mN:20486,mS:7507, mT:27993},
+      {kab:"Semarang",        n:52,s:49, t:101,g:2236,mN:28523,mS:7840, mT:36363},
+      {kab:"Temanggung",      n:42,s:42, t:84, g:1539,mN:19904,mS:8189, mT:28093},
+      {kab:"Kendal",          n:50,s:60, t:110,g:2112,mN:25184,mS:12006,mT:37190},
+      {kab:"Batang",          n:51,s:25, t:76, g:1355,mN:21331,mS:2734, mT:24065},
+      {kab:"Pekalongan",      n:63,s:26, t:89, g:1730,mN:24087,mS:6871, mT:30958},
+      {kab:"Pemalang",        n:66,s:52, t:118,g:2958,mN:41856,mS:9125, mT:50981},
+      {kab:"Tegal",           n:49,s:68, t:117,g:2637,mN:35201,mS:12938,mT:48139},
+      {kab:"Brebes",          n:77,s:89, t:166,g:3457,mN:42013,mS:15890,mT:57903},
+      {kab:"Kota Magelang",   n:13,s:7,  t:20, g:607, mN:8466, mS:1401, mT:9867 },
+      {kab:"Kota Surakarta",  n:28,s:45, t:73, g:1953,mN:19280,mS:11282,mT:30562},
+      {kab:"Kota Salatiga",   n:10,s:19, t:29, g:672, mN:7323, mS:3076, mT:10399},
+      {kab:"Kota Semarang",   n:46,s:148,t:194,g:3757,mN:35043,mS:28205,mT:63248},
+      {kab:"Kota Pekalongan", n:17,s:13, t:30, g:709, mN:8633, mS:2957, mT:11590},
+      {kab:"Kota Tegal",      n:18,s:16, t:34, g:843, mN:11382,mS:1968, mT:13350},
+    ],
+    2024: [
+      {kab:"Cilacap",         n:84,s:113,t:197,g:3792,mN:47086,mS:19175,mT:66261},
+      {kab:"Banyumas",        n:73,s:94, t:167,g:3499,mN:46426,mS:21046,mT:67472},
+      {kab:"Purbalingga",     n:60,s:18, t:78, g:1797,mN:31377,mS:2548, mT:33925},
+      {kab:"Banjarnegara",    n:75,s:25, t:100,g:1632,mN:28904,mS:3246, mT:32150},
+      {kab:"Kebumen",         n:56,s:56, t:112,g:2159,mN:34569,mS:8774, mT:43343},
+      {kab:"Purworejo",       n:43,s:46, t:89, g:1720,mN:22605,mS:4294, mT:26899},
+      {kab:"Wonosobo",        n:72,s:37, t:109,g:1732,mN:22761,mS:8012, mT:30773},
+      {kab:"Magelang",        n:59,s:75, t:134,g:2196,mN:26082,mS:12573,mT:38655},
+      {kab:"Boyolali",        n:52,s:49, t:101,g:1832,mN:26921,mS:6999, mT:33920},
+      {kab:"Klaten",          n:65,s:51, t:116,g:2547,mN:39304,mS:7188, mT:46492},
+      {kab:"Sukoharjo",       n:41,s:38, t:79, g:1918,mN:25380,mS:6329, mT:31709},
+      {kab:"Wonogiri",        n:78,s:37, t:115,g:1944,mN:31076,mS:3401, mT:34477},
+      {kab:"Karanganyar",     n:51,s:34, t:85, g:1954,mN:26418,mS:6202, mT:32620},
+      {kab:"Sragen",          n:49,s:42, t:91, g:1943,mN:26981,mS:7745, mT:34726},
+      {kab:"Grobogan",        n:73,s:65, t:138,g:2286,mN:33875,mS:8407, mT:42282},
+      {kab:"Blora",           n:56,s:46, t:102,g:1724,mN:24118,mS:3625, mT:27743},
+      {kab:"Rembang",         n:39,s:22, t:61, g:1232,mN:16465,mS:2041, mT:18506},
+      {kab:"Pati",            n:58,s:38, t:96, g:2148,mN:29671,mS:4331, mT:34002},
+      {kab:"Kudus",           n:27,s:26, t:53, g:1331,mN:19319,mS:3925, mT:23244},
+      {kab:"Jepara",          n:39,s:61, t:100,g:1957,mN:22659,mS:8585, mT:31244},
+      {kab:"Demak",           n:38,s:49, t:87, g:1524,mN:21519,mS:7842, mT:29361},
+      {kab:"Semarang",        n:52,s:50, t:102,g:2260,mN:28799,mS:7503, mT:36302},
+      {kab:"Temanggung",      n:42,s:43, t:85, g:1537,mN:19880,mS:8150, mT:28030},
+      {kab:"Kendal",          n:50,s:60, t:110,g:2279,mN:25713,mS:11807,mT:37520},
+      {kab:"Batang",          n:51,s:25, t:76, g:1311,mN:21993,mS:2952, mT:24945},
+      {kab:"Pekalongan",      n:63,s:27, t:90, g:1737,mN:24792,mS:7139, mT:31931},
+      {kab:"Pemalang",        n:66,s:55, t:121,g:2898,mN:42168,mS:9180, mT:51348},
+      {kab:"Tegal",           n:49,s:68, t:117,g:2595,mN:35462,mS:12872,mT:48334},
+      {kab:"Brebes",          n:77,s:88, t:165,g:3339,mN:43351,mS:16306,mT:59657},
+      {kab:"Kota Magelang",   n:13,s:7,  t:20, g:631, mN:8587, mS:1458, mT:10045},
+      {kab:"Kota Surakarta",  n:28,s:44, t:72, g:2040,mN:19283,mS:11578,mT:30861},
+      {kab:"Kota Salatiga",   n:10,s:21, t:31, g:727, mN:7455, mS:3310, mT:10765},
+      {kab:"Kota Semarang",   n:46,s:147,t:193,g:3854,mN:34937,mS:28904,mT:63841},
+      {kab:"Kota Pekalongan", n:17,s:13, t:30, g:712, mN:8914, mS:2912, mT:11826},
+      {kab:"Kota Tegal",      n:19,s:15, t:34, g:842, mN:11609,mS:2046, mT:13655},
+    ],
+    2025: [
+      {kab:"Cilacap",         n:84,s:111,t:195,g:3879,mN:47314,mS:18663,mT:65977},
+      {kab:"Banyumas",        n:74,s:97, t:171,g:3487,mN:45908,mS:20360,mT:66268},
+      {kab:"Purbalingga",     n:60,s:18, t:78, g:1767,mN:31239,mS:2428, mT:33667},
+      {kab:"Banjarnegara",    n:76,s:25, t:101,g:1685,mN:29091,mS:3158, mT:32249},
+      {kab:"Kebumen",         n:56,s:56, t:112,g:2250,mN:34588,mS:8517, mT:43105},
+      {kab:"Purworejo",       n:43,s:42, t:85, g:1660,mN:22468,mS:4014, mT:26482},
+      {kab:"Wonosobo",        n:72,s:37, t:109,g:1766,mN:22975,mS:7781, mT:30756},
+      {kab:"Magelang",        n:59,s:81, t:140,g:2237,mN:26053,mS:12070,mT:38123},
+      {kab:"Boyolali",        n:52,s:49, t:101,g:1776,mN:26367,mS:6894, mT:33261},
+      {kab:"Klaten",          n:65,s:52, t:117,g:2441,mN:38525,mS:6989, mT:45514},
+      {kab:"Sukoharjo",       n:41,s:41, t:82, g:1920,mN:24925,mS:6416, mT:31341},
+      {kab:"Wonogiri",        n:78,s:35, t:113,g:1927,mN:30261,mS:3193, mT:33454},
+      {kab:"Karanganyar",     n:51,s:34, t:85, g:1893,mN:26181,mS:6096, mT:32277},
+      {kab:"Sragen",          n:49,s:43, t:92, g:1948,mN:26756,mS:7703, mT:34459},
+      {kab:"Grobogan",        n:72,s:64, t:136,g:2300,mN:34459,mS:7779, mT:42238},
+      {kab:"Blora",           n:56,s:47, t:103,g:1755,mN:23769,mS:3354, mT:27123},
+      {kab:"Rembang",         n:39,s:23, t:62, g:1259,mN:16434,mS:2080, mT:18514},
+      {kab:"Pati",            n:59,s:38, t:97, g:2059,mN:30408,mS:4241, mT:34649},
+      {kab:"Kudus",           n:27,s:27, t:54, g:1294,mN:19198,mS:3896, mT:23094},
+      {kab:"Jepara",          n:39,s:62, t:101,g:2083,mN:23449,mS:8292, mT:31741},
+      {kab:"Demak",           n:38,s:49, t:87, g:1469,mN:22514,mS:7999, mT:30513},
+      {kab:"Semarang",        n:52,s:51, t:103,g:2200,mN:28428,mS:7394, mT:35822},
+      {kab:"Temanggung",      n:42,s:44, t:86, g:1547,mN:19875,mS:7900, mT:27775},
+      {kab:"Kendal",          n:50,s:60, t:110,g:2282,mN:25853,mS:11080,mT:36933},
+      {kab:"Batang",          n:51,s:25, t:76, g:1262,mN:22739,mS:3043, mT:25782},
+      {kab:"Pekalongan",      n:63,s:27, t:90, g:1746,mN:24945,mS:6846, mT:31791},
+      {kab:"Pemalang",        n:66,s:56, t:122,g:2769,mN:42144,mS:8916, mT:51060},
+      {kab:"Tegal",           n:49,s:67, t:116,g:2653,mN:35734,mS:12336,mT:48070},
+      {kab:"Brebes",          n:77,s:93, t:170,g:3334,mN:44014,mS:15864,mT:59878},
+      {kab:"Kota Magelang",   n:13,s:7,  t:20, g:612, mN:8463, mS:1507, mT:9970 },
+      {kab:"Kota Surakarta",  n:28,s:43, t:71, g:2047,mN:19215,mS:11804,mT:31019},
+      {kab:"Kota Salatiga",   n:10,s:21, t:31, g:723, mN:7446, mS:3445, mT:10891},
+      {kab:"Kota Semarang",   n:46,s:146,t:192,g:3904,mN:34689,mS:29617,mT:64306},
+      {kab:"Kota Pekalongan", n:17,s:13, t:30, g:695, mN:9045, mS:2948, mT:11993},
+      {kab:"Kota Tegal",      n:19,s:15, t:34, g:873, mN:11740,mS:2107, mT:13847},
+    ],
+  },
+  SD: {
+    2023: [
+      {kab:"Cilacap", n:972,s:63,t:1035,g:7897,mN:74550,mS:68947,mT:143497},
+      {kab:"Banyumas", n:761,s:55,t:816,g:7116,mN:65358,mS:60793,mT:126151},
+      {kab:"Purbalingga", n:461,s:11,t:472,g:3959,mN:34064,mS:31504,mT:65568},
+      {kab:"Banjarnegara", n:596,s:21,t:617,g:3782,mN:36771,mS:34039,mT:70810},
+      {kab:"Kebumen", n:720,s:27,t:747,g:5688,mN:52954,mS:48356,mT:101310},
+      {kab:"Purworejo", n:462,s:24,t:486,g:3841,mN:29924,mS:27836,mT:57760},
+      {kab:"Wonosobo", n:444,s:16,t:460,g:3378,mN:33494,mS:31263,mT:64757},
+      {kab:"Magelang", n:548,s:54,t:602,g:4756,mN:39709,mS:37019,mT:76728},
+      {kab:"Boyolali", n:543,s:41,t:584,g:4470,mN:31672,mS:29206,mT:60878},
+      {kab:"Klaten", n:622,s:85,t:707,g:5553,mN:43442,mS:39754,mT:83196},
+      {kab:"Sukoharjo", n:409,s:38,t:447,g:4187,mN:26911,mS:25113,mT:52024},
+      {kab:"Wonogiri", n:745,s:28,t:773,g:4806,mN:32617,mS:30623,mT:63240},
+      {kab:"Karanganyar", n:466,s:36,t:502,g:4363,mN:31277,mS:29190,mT:60467},
+      {kab:"Sragen", n:515,s:43,t:558,g:4646,mN:34402,mS:31872,mT:66274},
+      {kab:"Grobogan", n:783,s:22,t:805,g:5541,mN:57704,mS:54245,mT:111949},
+      {kab:"Blora", n:570,s:22,t:592,g:4372,mN:31455,mS:29269,mT:60724},
+      {kab:"Rembang", n:363,s:13,t:376,g:3217,mN:24896,mS:22858,mT:47754},
+      {kab:"Pati", n:642,s:37,t:679,g:5472,mN:42373,mS:39011,mT:81384},
+      {kab:"Kudus", n:397,s:28,t:425,g:3556,mN:25908,mS:24105,mT:50013},
+      {kab:"Jepara", n:572,s:29,t:601,g:4772,mN:41537,mS:38526,mT:80063},
+      {kab:"Demak", n:466,s:23,t:489,g:4444,mN:47632,mS:44280,mT:91912},
+      {kab:"Semarang", n:451,s:50,t:501,g:4671,mN:35546,mS:33469,mT:69015},
+      {kab:"Temanggung", n:408,s:26,t:434,g:3371,mN:26398,mS:24025,mT:50423},
+      {kab:"Kendal", n:538,s:30,t:568,g:4450,mN:40318,mS:37103,mT:77421},
+      {kab:"Batang", n:446,s:8,t:454,g:3405,mN:31141,mS:28837,mT:59978},
+      {kab:"Pekalongan", n:463,s:38,t:501,g:3809,mN:35617,mS:32578,mT:68195},
+      {kab:"Pemalang", n:708,s:31,t:739,g:5815,mN:66492,mS:61065,mT:127557},
+      {kab:"Tegal", n:646,s:35,t:681,g:5974,mN:66022,mS:60997,mT:127019},
+      {kab:"Brebes", n:854,s:34,t:888,g:6844,mN:76257,mS:70991,mT:147248},
+      {kab:"Kota Magelang", n:59,s:15,t:74,g:817,mN:6333,mS:6053,mT:12386},
+      {kab:"Kota Surakarta", n:152,s:92,t:244,g:3309,mN:27548,mS:26499,mT:54047},
+      {kab:"Kota Salatiga", n:59,s:21,t:80,g:1012,mN:7784,mS:7286,mT:15070},
+      {kab:"Kota Semarang", n:325,s:185,t:510,g:6566,mN:64806,mS:61154,mT:125960},
+      {kab:"Kota Pekalongan", n:71,s:32,t:103,g:1231,mN:10085,mS:9383,mT:19468},
+      {kab:"Kota Tegal", n:117,s:19,t:136,g:1233,mN:11607,mS:10983,mT:22590}
+    ],
+    2024: [
+      {kab:"Cilacap", n:972,s:64,t:1036,g:8637,mN:129609,mS:13551,mT:143160},
+      {kab:"Banyumas", n:751,s:57,t:808,g:7681,mN:113053,mS:11235,mT:124288},
+      {kab:"Purbalingga", n:459,s:11,t:470,g:4270,mN:62695,mS:2692,mT:65387},
+      {kab:"Banjarnegara", n:595,s:21,t:616,g:4149,mN:65762,mS:4726,mT:70488},
+      {kab:"Kebumen", n:718,s:28,t:746,g:6214,mN:94001,mS:6247,mT:100248},
+      {kab:"Purworejo", n:462,s:27,t:489,g:4390,mN:51216,mS:5502,mT:56718},
+      {kab:"Wonosobo", n:444,s:17,t:461,g:3758,mN:60109,mS:3507,mT:63616},
+      {kab:"Magelang", n:542,s:54,t:596,g:5207,mN:62946,mS:12600,mT:75546},
+      {kab:"Boyolali", n:543,s:42,t:585,g:4786,mN:49518,mS:11123,mT:60641},
+      {kab:"Klaten", n:622,s:87,t:709,g:6132,mN:62062,mS:20354,mT:82416},
+      {kab:"Sukoharjo", n:409,s:38,t:447,g:4511,mN:38936,mS:13000,mT:51936},
+      {kab:"Wonogiri", n:745,s:27,t:772,g:5307,mN:55393,mS:7026,mT:62419},
+      {kab:"Karanganyar", n:441,s:36,t:477,g:4656,mN:50698,mS:9135,mT:59833},
+      {kab:"Sragen", n:514,s:43,t:557,g:5220,mN:53810,mS:12315,mT:66125},
+      {kab:"Grobogan", n:783,s:22,t:805,g:6246,mN:105560,mS:4711,mT:110271},
+      {kab:"Blora", n:570,s:22,t:592,g:4920,mN:55803,mS:4033,mT:59836},
+      {kab:"Rembang", n:363,s:14,t:377,g:3454,mN:45031,mS:2741,mT:47772},
+      {kab:"Pati", n:642,s:36,t:678,g:5812,mN:72903,mS:6971,mT:79874},
+      {kab:"Kudus", n:397,s:28,t:425,g:3850,mN:41451,mS:8131,mT:49582},
+      {kab:"Jepara", n:539,s:31,t:570,g:5111,mN:72333,mS:6901,mT:79234},
+      {kab:"Demak", n:466,s:22,t:488,g:4661,mN:86019,mS:5917,mT:91936},
+      {kab:"Semarang", n:451,s:50,t:501,g:5172,mN:57247,mS:11610,mT:68857},
+      {kab:"Temanggung", n:408,s:26,t:434,g:3876,mN:43071,mS:5645,mT:48716},
+      {kab:"Kendal", n:538,s:30,t:568,g:5008,mN:70589,mS:6796,mT:77385},
+      {kab:"Batang", n:446,s:8,t:454,g:3926,mN:57947,mS:2118,mT:60065},
+      {kab:"Pekalongan", n:463,s:39,t:502,g:4307,mN:61431,mS:7303,mT:68734},
+      {kab:"Pemalang", n:708,s:32,t:740,g:6265,mN:121592,mS:6654,mT:128246},
+      {kab:"Tegal", n:646,s:35,t:681,g:6372,mN:121144,mS:7052,mT:128196},
+      {kab:"Brebes", n:851,s:34,t:885,g:7915,mN:142013,mS:6132,mT:148145},
+      {kab:"Kota Magelang", n:59,s:15,t:74,g:867,mN:8452,mS:3845,mT:12297},
+      {kab:"Kota Surakarta", n:135,s:89,t:224,g:3526,mN:26068,mS:27936,mT:54004},
+      {kab:"Kota Salatiga", n:59,s:21,t:80,g:1110,mN:9203,mS:5778,mT:14981},
+      {kab:"Kota Semarang", n:325,s:185,t:510,g:7083,mN:80617,mS:45098,mT:125715},
+      {kab:"Kota Pekalongan", n:71,s:32,t:103,g:1350,mN:13082,mS:6211,mT:19293},
+      {kab:"Kota Tegal", n:117,s:20,t:137,g:1370,mN:18091,mS:4632,mT:22723}
+    ],
+    2025: [
+      {kab:"Cilacap", n:969,s:64,t:1033,g:9135,mN:129675,mS:13645,mT:143320},
+      {kab:"Banyumas", n:749,s:58,t:807,g:7609,mN:112023,mS:11459,mT:123482},
+      {kab:"Purbalingga", n:459,s:12,t:471,g:4208,mN:63234,mS:2769,mT:66003},
+      {kab:"Banjarnegara", n:595,s:21,t:616,g:4357,mN:65445,mS:4887,mT:70332},
+      {kab:"Kebumen", n:717,s:30,t:747,g:6584,mN:92906,mS:6553,mT:99459},
+      {kab:"Purworejo", n:462,s:27,t:489,g:4269,mN:50253,mS:5637,mT:55890},
+      {kab:"Wonosobo", n:443,s:17,t:460,g:3652,mN:59558,mS:3546,mT:63104},
+      {kab:"Magelang", n:542,s:55,t:597,g:5264,mN:62234,mS:12797,mT:75031},
+      {kab:"Boyolali", n:542,s:43,t:585,g:4717,mN:49286,mS:11525,mT:60811},
+      {kab:"Klaten", n:622,s:89,t:711,g:5983,mN:62028,mS:20596,mT:82624},
+      {kab:"Sukoharjo", n:409,s:39,t:448,g:4681,mN:38458,mS:13496,mT:51954},
+      {kab:"Wonogiri", n:731,s:27,t:758,g:5519,mN:55376,mS:6971,mT:62347},
+      {kab:"Karanganyar", n:441,s:36,t:477,g:4574,mN:49791,mS:9218,mT:59009},
+      {kab:"Sragen", n:514,s:44,t:558,g:5354,mN:53790,mS:12368,mT:66158},
+      {kab:"Grobogan", n:780,s:23,t:803,g:6123,mN:104996,mS:4844,mT:109840},
+      {kab:"Blora", n:570,s:22,t:592,g:4966,mN:55802,mS:4195,mT:59997},
+      {kab:"Rembang", n:363,s:15,t:378,g:3383,mN:44795,mS:2893,mT:47688},
+      {kab:"Pati", n:571,s:38,t:609,g:5658,mN:72219,mS:7374,mT:79593},
+      {kab:"Kudus", n:397,s:28,t:425,g:3728,mN:41507,mS:8329,mT:49836},
+      {kab:"Jepara", n:540,s:31,t:571,g:5084,mN:72074,mS:7186,mT:79260},
+      {kab:"Demak", n:466,s:22,t:488,g:4521,mN:86587,mS:6129,mT:92716},
+      {kab:"Semarang", n:451,s:50,t:501,g:5035,mN:57072,mS:11652,mT:68724},
+      {kab:"Temanggung", n:408,s:27,t:435,g:3785,mN:41606,mS:5623,mT:47229},
+      {kab:"Kendal", n:537,s:30,t:567,g:5007,mN:70584,mS:7103,mT:77687},
+      {kab:"Batang", n:445,s:8,t:453,g:3820,mN:58354,mS:2233,mT:60587},
+      {kab:"Pekalongan", n:463,s:39,t:502,g:4278,mN:62052,mS:7469,mT:69521},
+      {kab:"Pemalang", n:708,s:34,t:742,g:6302,mN:122172,mS:6941,mT:129113},
+      {kab:"Tegal", n:646,s:35,t:681,g:6522,mN:122355,mS:7323,mT:129678},
+      {kab:"Brebes", n:850,s:35,t:885,g:7970,mN:143337,mS:6386,mT:149723},
+      {kab:"Kota Magelang", n:59,s:16,t:75,g:860,mN:8440,mS:3812,mT:12252},
+      {kab:"Kota Surakarta", n:119,s:88,t:207,g:3554,mN:25546,mS:27577,mT:53123},
+      {kab:"Kota Salatiga", n:59,s:21,t:80,g:1094,mN:9088,mS:5901,mT:14989},
+      {kab:"Kota Semarang", n:325,s:188,t:513,g:7217,mN:79547,mS:45421,mT:124968},
+      {kab:"Kota Pekalongan", n:71,s:32,t:103,g:1339,mN:13007,mS:6210,mT:19217},
+      {kab:"Kota Tegal", n:117,s:22,t:139,g:1407,mN:18194,mS:4785,mT:22979}
+    ]
+  }
+};
+
+// ── State ────────────────────────────────────────────────────
+let CL='SMA', CY=2023, SK='mT', SA=false, BARMODE='stacked', TREND='all';
+let bInst=null, dInst=null, tInst=null;
+
+// Color configs
+const CFG = {
+  SMA:{c1:'#1d4ed8',c2:'#93c5fd',c3:'#0ea5e9',tag:'tsma',dot:'bg-blue-300'},
+  SMP:{c1:'#0891b2',c2:'#67e8f9',c3:'#06b6d4',tag:'tsmp',dot:'bg-cyan-300'},
+  SD:{c1:'#0891b2',c2:'#67e8f9',c3:'#06b6d4',tag:'tsd',dot:'bg-coral-300'},
+};
+
+const TREND_COLORS = {
+  sek :{line:'#f59e0b',fill:'rgba(245,158,11,.12)',label:'Sekolah'},
+  guru:{line:'#8b5cf6',fill:'rgba(139,92,246,.12)',label:'Guru'},
+  murid:{line:'#ef4444',fill:'rgba(239,68,68,.12)',label:'Murid'},
+};
+
+const fmt = n => (+n).toLocaleString('id-ID');
+
+// ── Get current data ─────────────────────────────────────────
+const D = () => DB[CL][CY];
+
+// ── KPI ──────────────────────────────────────────────────────
+function updKPI(){
+  const d=D();
+  const tS=d.reduce((a,r)=>a+r.t,0);
+  const tN=d.reduce((a,r)=>a+r.n,0);
+  const tSw=d.reduce((a,r)=>a+r.s,0);
+  const tG=d.reduce((a,r)=>a+r.g,0);
+  const tM=d.reduce((a,r)=>a+r.mT,0);
+  const aR=(d.reduce((a,r)=>a+(r.mT/r.g),0)/d.length).toFixed(1);
+  const yr = {2023:'2023/2024',2024:'2024/2025',2025:'2025/2026'}[CY];
+  document.getElementById('kSek').textContent    = fmt(tS);
+  document.getElementById('kSekSub').textContent = `Negeri: ${fmt(tN)} · Swasta: ${fmt(tSw)}`;
+  document.getElementById('kGuru').textContent   = fmt(tG);
+  document.getElementById('kGuruSub').textContent= `${CL} se-Jawa Tengah ${yr}`;
+  document.getElementById('kMurid').textContent  = fmt(tM);
+  document.getElementById('kMuridSub').textContent=`Siswa aktif tahun ${yr}`;
+  document.getElementById('kRasio').textContent  = aR;
+  document.getElementById('kRasioSub').textContent='Rata-rata murid/guru per kab/kota';
+}
+
+// ── Bar Chart ─────────────────────────────────────────────────
+function updBar(){
+  const d=D();
+  const top10=[...d].sort((a,b)=>b.mT-a.mT).slice(0,10);
+  const col=CFG[CL];
+  if(bInst)bInst.destroy();
+  bInst=new Chart(document.getElementById('barChart').getContext('2d'),{
+    type:'bar',
+    data:{
+      labels:top10.map(r=>r.kab),
+      datasets:[
+        {label:'Murid Negeri',data:top10.map(r=>r.mN),backgroundColor:col.c1,borderRadius:5,barPercentage:.65,stack:'s'},
+        {label:'Murid Swasta',data:top10.map(r=>r.mS),backgroundColor:col.c2,borderRadius:5,barPercentage:.65,stack:'s'},
+      ]
+    },
+    options:{
+      indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      animation:{duration:650,easing:'easeOutQuart'},
+      plugins:{
+        legend:{position:'top',labels:{font:{family:'DM Sans',size:11},boxWidth:11,padding:12}},
+        tooltip:{callbacks:{label:c=>`  ${c.dataset.label}: ${fmt(c.raw)}`}}
+      },
+      scales:{
+        x:{stacked:BARMODE==='stacked',grid:{color:'#f1f5f9'},ticks:{font:{family:'DM Sans',size:10},callback:v=>v>=1000?Math.round(v/1000)+'rb':v}},
+        y:{stacked:BARMODE==='stacked',grid:{display:false},ticks:{font:{family:'DM Sans',size:11}}}
+      }
+    }
+  });
+  const tag=document.getElementById('barTag');
+  tag.className=`chip ${col.tag}`;
+  tag.textContent=CL;
+}
+
+// ── Donut ─────────────────────────────────────────────────────
+function updDonut(){
+  const d=D();
+  const tN=d.reduce((a,r)=>a+r.n,0);
+  const tS=d.reduce((a,r)=>a+r.s,0);
+  const tT=tN+tS;
+  const col=CFG[CL];
+  if(dInst)dInst.destroy();
+  dInst=new Chart(document.getElementById('donutChart').getContext('2d'),{
+    type:'doughnut',
+    data:{
+      labels:['Negeri','Swasta'],
+      datasets:[{data:[tN,tS],backgroundColor:[col.c1,col.c2],borderColor:['#fff','#fff'],borderWidth:3,hoverOffset:8}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,cutout:'68%',
+      animation:{duration:750,easing:'easeOutBack'},
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:c=>`  ${c.label}: ${fmt(c.raw)} (${((c.raw/tT)*100).toFixed(1)}%)`}}
+      }
+    },
+    plugins:[{id:'ct',afterDraw(ch){
+      const{ctx,chartArea:{width,height,left,top}}=ch;
+      ctx.save();
+      const cx=left+width/2,cy=top+height/2;
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.font=`bold 23px Sora,sans-serif`;ctx.fillStyle='#1e293b';
+      ctx.fillText(fmt(tT),cx,cy-10);
+      ctx.font=`11px DM Sans,sans-serif`;ctx.fillStyle='#94a3b8';
+      ctx.fillText('Total Sekolah',cx,cy+12);
+      ctx.restore();
+    }}]
+  });
+  const pN=((tN/tT)*100).toFixed(1),pS=((tS/tT)*100).toFixed(1);
+  document.getElementById('donutLeg').innerHTML=`
+    <span class="flex items-center gap-1.5 text-xs font-medium text-slate-600">
+      <span class="w-3 h-3 rounded inline-block" style="background:${col.c1}"></span>Negeri ${pN}%
+    </span>
+    <span class="flex items-center gap-1.5 text-xs font-medium text-slate-600">
+      <span class="w-3 h-3 rounded inline-block" style="background:${col.c2}"></span>Swasta ${pS}%
+    </span>`;
+}
+
+// ── Trend Chart ───────────────────────────────────────────────
+function updTrend(){
+  const yrs=[2023,2024,2025];
+  const lbls=['2023/2024','2024/2025','2025/2026'];
+
+  // Compute totals per year
+  const totals=yrs.map(y=>({
+    sek:  DB[CL][y].reduce((a,r)=>a+r.t,0),
+    guru: DB[CL][y].reduce((a,r)=>a+r.g,0),
+    murid:DB[CL][y].reduce((a,r)=>a+r.mT,0),
+  }));
+
+  const makeDS=(key,col,yAxisID)=>({
+    label:TREND_COLORS[key].label,
+    data:totals.map(t=>t[key]),
+    borderColor:col.line,
+    backgroundColor:col.fill,
+    fill:true,
+    tension:.42,
+    pointBackgroundColor:col.line,
+    pointRadius:6,
+    pointHoverRadius:9,
+    borderWidth:3,
+    yAxisID,
+  });
+
+  let datasets=[];
+  let scales={
+    x:{grid:{color:'#f1f5f9'},ticks:{font:{family:'DM Sans',size:12}}},
+  };
+
+  if(TREND==='all'){
+    // three y axes
+    datasets=[
+      {...makeDS('sek',TREND_COLORS.sek,'ySek')},
+      {...makeDS('guru',TREND_COLORS.guru,'yGuru')},
+      {...makeDS('murid',TREND_COLORS.murid,'yMrd')},
+    ];
+    scales.ySek ={position:'left', grid:{display:false},ticks:{color:TREND_COLORS.sek.line, font:{size:10,family:'DM Sans'},callback:v=>fmt(v)},title:{display:true,text:'Sekolah',color:TREND_COLORS.sek.line,font:{size:10}}};
+    scales.yGuru={position:'left', grid:{color:'#f1f5f9'},ticks:{color:TREND_COLORS.guru.line,font:{size:10,family:'DM Sans'},callback:v=>v>=1000?Math.round(v/1000)+'rb':v},title:{display:true,text:'Guru',color:TREND_COLORS.guru.line,font:{size:10}}};
+    scales.yMrd ={position:'right',grid:{display:false},ticks:{color:TREND_COLORS.murid.line,font:{size:10,family:'DM Sans'},callback:v=>v>=1000?Math.round(v/1000)+'rb':v},title:{display:true,text:'Murid',color:TREND_COLORS.murid.line,font:{size:10}}};
+  } else {
+    const keyMap={sek:'sek',guru:'guru',murid:'murid'};
+    const k=keyMap[TREND];
+    datasets=[{...makeDS(k,TREND_COLORS[k],'y')}];
+    scales.y={position:'left',grid:{color:'#f1f5f9'},ticks:{font:{family:'DM Sans',size:11},callback:v=>v>=1000?Math.round(v/1000)+'rb':v}};
+  }
+
+  if(tInst)tInst.destroy();
+  tInst=new Chart(document.getElementById('trendChart').getContext('2d'),{
+    type:'line',
+    data:{labels:lbls,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      animation:{duration:700,easing:'easeOutQuart'},
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{position:'top',labels:{font:{family:'DM Sans',size:11},boxWidth:12,padding:14}},
+        tooltip:{callbacks:{label:c=>`  ${c.dataset.label}: ${fmt(c.raw)}`}}
+      },
+      scales
+    }
+  });
+}
+
+// ── Table ─────────────────────────────────────────────────────
+function updTable(filter=''){
+  let data=[...D()].filter(r=>r.kab.toLowerCase().includes(filter.toLowerCase()));
+  data.sort((a,b)=>{
+    const va=typeof a[SK]==='string'?a[SK]:+a[SK];
+    const vb=typeof b[SK]==='string'?b[SK]:+b[SK];
+    return SA?(va<vb?-1:va>vb?1:0):(va>vb?-1:va<vb?1:0);
+  });
+  const tg=CFG[CL].tag;
+  document.getElementById('tBody').innerHTML=data.map((r,i)=>`
+    <tr class="drow border-b border-slate-50 ${i%2===0?'bg-white':'bg-slate-50/60'}" onclick="showRatio('${r.kab}',this)" style="transition:background .15s" data-kab="${r.kab}">
+      <td class="px-4 py-2.5 font-semibold text-slate-700">${r.kab}</td>
+      <td class="px-3 py-2.5 text-right"><span class="chip ${tg}">${fmt(r.n)}</span></td>
+      <td class="px-3 py-2.5 text-right"><span class="chip bg-slate-100 text-slate-500">${fmt(r.s)}</span></td>
+      <td class="px-3 py-2.5 text-right font-bold text-slate-700">${fmt(r.t)}</td>
+      <td class="px-3 py-2.5 text-right font-medium text-violet-700">${fmt(r.g)}</td>
+      <td class="px-3 py-2.5 text-right text-slate-600">${fmt(r.mN)}</td>
+      <td class="px-3 py-2.5 text-right text-slate-600">${fmt(r.mS)}</td>
+      <td class="px-3 py-2.5 text-right font-bold text-emerald-700">${fmt(r.mT)}</td>
+    </tr>`).join('');
+  if(!data.length) document.getElementById('tBody').innerHTML=
+    `<tr><td colspan="8" class="px-4 py-10 text-center text-slate-400 text-sm">Tidak ditemukan: "<strong>${filter}</strong>"</td></tr>`;
+
+  // Re-highlight selected row if still visible
+  if(SELECTED_KAB){
+    const row=document.querySelector(`tr[data-kab="${SELECTED_KAB}"]`);
+    if(row) row.classList.add('selected');
+  }
+}
+
+// ── Ratio Chart ───────────────────────────────────────────────
+let rInst=null;
+let SELECTED_KAB=null;
+const IDEAL=20; // batas ideal 1:20
+
+function showRatio(kab, rowEl){
+  // Toggle: klik dua kali row yang sama → tutup panel
+  if(SELECTED_KAB===kab){
+    SELECTED_KAB=null;
+    rowEl.classList.remove('selected');
+    document.getElementById('ratioSection').style.display='none';
+    return;
+  }
+
+  // Deselect previous
+  document.querySelectorAll('.drow.selected').forEach(r=>r.classList.remove('selected'));
+  rowEl.classList.add('selected');
+  SELECTED_KAB=kab;
+
+  const yrs=[2023,2024,2025];
+  const lbls=['2023/2024','2024/2025','2025/2026'];
+
+  // Collect rasio, guru, murid per tahun untuk kabupaten ini
+  const points=yrs.map(y=>{
+    const row=DB[CL][y].find(r=>r.kab===kab);
+    if(!row) return {rasio:null,g:0,mT:0};
+    return {rasio:+(row.mT/row.g).toFixed(2), g:row.g, mT:row.mT};
+  });
+
+  // Use selected year for mini stats
+  const cur=DB[CL][CY].find(r=>r.kab===kab);
+  const curRasio=cur?(cur.mT/cur.g).toFixed(1):'—';
+  const yr={2023:'2023/2024',2024:'2024/2025',2025:'2025/2026'}[CY];
+
+  // Mini stats
+  document.getElementById('ratioTitle').textContent=`Rasio Murid/Guru — ${kab}`;
+  document.getElementById('rsGuru').textContent  = cur?fmt(cur.g):'—';
+  document.getElementById('rsMurid').textContent = cur?fmt(cur.mT):'—';
+  document.getElementById('rsRasio').textContent = cur?`1 : ${curRasio}`:'—';
+
+  // Status badge
+  const badge=document.getElementById('ratioBadge');
+  const ratioNum=parseFloat(curRasio);
+  if(ratioNum<=IDEAL){
+    badge.className='rbadge ok'; badge.textContent='✓ Ideal (≤1:20)';
+  } else if(ratioNum<=25){
+    badge.className='rbadge warn'; badge.textContent='⚠ Sedikit Melebihi (>1:20)';
+  } else {
+    badge.className='rbadge danger'; badge.textContent='✗ Kekurangan Guru (>1:25)';
+  }
+
+  // Point colors: red if above ideal, green if below
+  const ptColors=points.map(p=>p.rasio===null?'#94a3b8':p.rasio>IDEAL?'#ef4444':'#22c55e');
+
+  // Chart
+  if(rInst) rInst.destroy();
+  const ctx=document.getElementById('ratioChart').getContext('2d');
+  rInst=new Chart(ctx,{
+    type:'line',
+    data:{
+      labels:lbls,
+      datasets:[
+        {
+          label:'Rasio Aktual (Murid/Guru)',
+          data:points.map(p=>p.rasio),
+          borderColor:'#f59e0b',
+          backgroundColor:'rgba(245,158,11,.10)',
+          fill:true,
+          tension:.35,
+          pointRadius:9,
+          pointHoverRadius:12,
+          pointBackgroundColor:ptColors,
+          pointBorderColor:'white',
+          pointBorderWidth:2.5,
+          borderWidth:3,
+          yAxisID:'y',
+          order:1,
+        },
+        {
+          label:'Batas Ideal 1:20',
+          data:lbls.map(()=>IDEAL),
+          borderColor:'#ef4444',
+          borderDash:[8,5],
+          borderWidth:2.5,
+          pointRadius:0,
+          fill:false,
+          tension:0,
+          yAxisID:'y',
+          order:2,
+        },
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      animation:{duration:600, easing:'easeOutQuart'},
+      interaction:{mode:'index', intersect:false},
+      plugins:{
+        legend:{
+          position:'top',
+          labels:{font:{family:'DM Sans',size:11},boxWidth:12,padding:14}
+        },
+        tooltip:{
+          callbacks:{
+            label:c=>{
+              if(c.datasetIndex===1) return `  Batas ideal: 1 guru : ${IDEAL} murid`;
+              const v=c.raw;
+              const status=v>IDEAL?` ⚠ melebihi ideal`:` ✓ ideal`;
+              return `  Rasio: 1 guru : ${v} murid${status}`;
+            },
+            afterBody:ctx=>{
+              const pt=points[ctx[0].dataIndex];
+              if(!pt||!pt.g) return [];
+              return[`  Guru: ${fmt(pt.g)}   Murid: ${fmt(pt.mT)}`];
+            }
+          }
+        },
+        annotation:{} // placeholder for future
+      },
+      scales:{
+        x:{
+          grid:{color:'#f1f5f9'},
+          ticks:{font:{family:'DM Sans',size:12}}
+        },
+        y:{
+          position:'left',
+          grid:{color:'#f1f5f9'},
+          suggestedMin:0,
+          ticks:{
+            font:{family:'DM Sans',size:11},
+            callback:v=>`1 : ${v}`
+          },
+          title:{display:true,text:'Rasio Murid per Guru',font:{family:'DM Sans',size:11},color:'#64748b'}
+        }
+      }
+    }
+  });
+
+  // Reveal and scroll into view
+  const panel=document.getElementById('ratioSection');
+  panel.style.display='block';
+  panel.style.animation='none';
+  panel.offsetHeight; // reflow
+  panel.style.animation='';
+  panel.classList.add('ratio-panel');
+  setTimeout(()=>panel.scrollIntoView({behavior:'smooth',block:'nearest'}),80);
+}
+
+// ── Full refresh ──────────────────────────────────────────────
+function refresh(){
+  const col=CFG[CL];
+  const yr={2023:'2023/2024',2024:'2024/2025',2025:'2025/2026'}[CY];
+  document.getElementById('indDot').className=`w-2 h-2 rounded-full ${col.dot} flex-shrink-0`;
+  document.getElementById('indTxt').textContent=`${CL} · ${yr}`;
+  document.getElementById('noteChip').textContent=`✅ Data riil: ${CL} ${yr}`;
+  updKPI(); updBar(); updDonut(); updTrend(); updTable(document.getElementById('srch').value);
+
+  // If a kabupaten is selected, refresh its ratio chart too
+  if(SELECTED_KAB){
+    const row=document.querySelector(`tr[data-kab="${SELECTED_KAB}"]`);
+    if(row) showRatio(SELECTED_KAB, row);
+    else{
+      // kabupaten not in filtered list
+      document.getElementById('ratioSection').style.display='none';
+    }
+  }
+}
+
+// ── Controls ──────────────────────────────────────────────────
+function setLevel(l,btn){
+  CL=l;
+  SELECTED_KAB=null;
+  document.getElementById('ratioSection').style.display='none';
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  refresh();
+}
+function setYear(y){ CY=+y; refresh(); }
+function setBarMode(m,btn){
+  BARMODE=m;
+  document.querySelectorAll('.segs').forEach(b=>{if(b.closest('#barChart'?.parentElement)!==null||b.id==='btnStk'||b.id==='btnGrp')b.classList.remove('on');});
+  document.getElementById('btnStk').classList.toggle('on',m==='stacked');
+  document.getElementById('btnGrp').classList.toggle('on',m==='grouped');
+  updBar();
+}
+function setTrend(t,btn){
+  TREND=t;
+  ['tAll','tSek','tGuru','tMrd'].forEach(id=>document.getElementById(id).classList.remove('on'));
+  btn.classList.add('on');
+  updTrend();
+}
+function srt(k){
+  if(SK===k)SA=!SA; else{SK=k;SA=false;}
+  updTable(document.getElementById('srch').value);
+}
+document.getElementById('srch').addEventListener('input',e=>updTable(e.target.value));
+
+// ── Init ──────────────────────────────────────────────────────
+refresh();
+</script>
+</body>
+</html>
