@@ -33,6 +33,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:#87a2ce;min-hei
 .smp.on{background:linear-gradient(135deg,#f3f717,#ff951b);}
 .sma.on{background:linear-gradient(135deg,#ffb8a6,#df2b2b);}
 .sd.on{background:linear-gradient(135deg,#d81dd8,#f1c1dd);}
+.smk.on{background:linear-gradient(135deg,#d81dd8,#f1c1dd);}
 .ysel{padding:7px 30px 7px 12px;border-radius:12px;border:2px solid #e2e8f0;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;background:white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;color:#1e293b;cursor:pointer;outline:none;appearance:none;transition:border-color .2s;}
 .ysel:focus{border-color:#3b82f6;}
 
@@ -65,6 +66,7 @@ thead th{position:sticky;top:0;z-index:5;}
 /* Chips */
 .chip{display:inline-flex;align-items:center;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:600;}
 .tsma{background:#dbeafe;color:#1d4ed8;}
+.tsmk{background:#cffafe;color:#0e7490;}
 .tsmp{background:#cffafe;color:#0e7490;}
 .tsd{background:#dbeafe;color:#1d4ed8;}
 .treal{background:#dcfce7;color:#15803d;}
@@ -103,6 +105,8 @@ thead th{position:sticky;top:0;z-index:5;}
 .mstat-val{font-family:'Sora',sans-serif;font-size:1.35rem;font-weight:800;color:#1e293b;}
 .mstat-lbl{font-size:10.5px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-top:3px;}
 </style>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
 
@@ -122,7 +126,7 @@ thead th{position:sticky;top:0;z-index:5;}
       </div>
       <div>
         <h1 style="font-family:'Sora',sans-serif;" class="font-extrabold text-[1.6rem] tracking-tight leading-snug">Dashboard Statistik Pendidikan</h1>
-        <p class="text-blue-200 text-sm mt-0.5 font-medium">Provinsi Jawa Tengah &nbsp;·&nbsp; SD, SMP &amp; SMA</p>
+        <p class="text-blue-200 text-sm mt-0.5 font-medium">Provinsi Jawa Tengah &nbsp;·&nbsp; SD, SMP &amp; SMA/SMK</p>
       </div>
     </div>
     <div class="flex flex-wrap items-center gap-2 fade-up d2">
@@ -138,6 +142,9 @@ thead th{position:sticky;top:0;z-index:5;}
     <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Tingkat:</span>
     <button class="fbtn sma on" onclick="setLevel('SMA',this)">
       <svg width="13" height="13" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 2L17 7L9 12L1 7Z"/><path d="M3 9.5V14c0 0 2.5 2.5 6 2.5S15 14 15 14V9.5"/></svg>SMA
+    </button>
+    <button class="fbtn smp" onclick="setLevel('SMK',this)">
+      <svg width="13" height="13" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 2L17 7L9 12L1 7Z"/><path d="M3 9.5V14c0 0 2.5 2.5 6 2.5S15 14 15 14V9.5"/></svg>SMK
     </button>
     <button class="fbtn smp" onclick="setLevel('SMP',this)">
       <svg width="13" height="13" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 2L17 7L9 12L1 7Z"/><path d="M3 9.5V14c0 0 2.5 2.5 6 2.5S15 14 15 14V9.5"/></svg>SMP
@@ -269,7 +276,7 @@ thead th{position:sticky;top:0;z-index:5;}
   <section class="ccard fade-up d6">
     <div class="flex flex-wrap items-start justify-between gap-3 mb-5">
       <div>
-        <p class="ctitle">Tren Jumlah Sekolah, Guru &amp; Murid (2023–2025)</p>
+        <p class="ctitle">Tren Jumlah Sekolah, Guru &amp; Murid (2024–2025)</p>
         <p class="csub">Perbandingan antar tahun ajaran berdasarkan data riil</p>
       </div>
       <div class="seg">
@@ -349,9 +356,73 @@ thead th{position:sticky;top:0;z-index:5;}
       </table>
     </div>
   </section>
+
+  <!-- ═══════════ PETA RASIO KABUPATEN ═══════════ -->
+  <section class="ccard fade-up" id="mapSection">
+    <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
+      <div>
+        <p class="ctitle">🗺️ Peta Rasio Murid/Guru — Jawa Tengah</p>
+        <p class="csub">Warna hijau = rasio ideal · Warna merah = kekurangan guru · Klik wilayah untuk detail · Titik = lokasi sekolah</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-xs font-semibold text-slate-500">🏫 Titik sekolah mengikuti filter jenjang aktif · Klik titik untuk melihat nama sekolah</span>
+      </div>
+    </div>
+    <!-- Legend -->
+    <div class="flex flex-wrap gap-3 mb-3 text-xs">
+      <span class="flex items-center gap-1.5 font-semibold"><span class="inline-block w-4 h-4 rounded" style="background:#22c55e"></span>≤ 15 (Sangat Baik)</span>
+      <span class="flex items-center gap-1.5 font-semibold"><span class="inline-block w-4 h-4 rounded" style="background:#86efac"></span>15–20 (Baik/Ideal)</span>
+      <span class="flex items-center gap-1.5 font-semibold"><span class="inline-block w-4 h-4 rounded" style="background:#fbbf24"></span>20–25 (Sedikit Melebihi)</span>
+      <span class="flex items-center gap-1.5 font-semibold"><span class="inline-block w-4 h-4 rounded" style="background:#f97316"></span>25–30 (Melebihi)</span>
+      <span class="flex items-center gap-1.5 font-semibold"><span class="inline-block w-4 h-4 rounded" style="background:#ef4444"></span>&gt; 30 (Kritis)</span>
+    </div>
+    <div id="jatengMap" style="height:480px;border-radius:14px;border:2px solid #e2e8f0;overflow:hidden;"></div>
+    <div class="mt-3 flex flex-wrap gap-3 text-xs text-slate-500">
+      <span>🟣 <strong>SD</strong> &nbsp;|&nbsp; 🔵 <strong>SMP</strong> &nbsp;|&nbsp; 🔷 <strong>SMA</strong> &nbsp;|&nbsp; 🟢 <strong>SMK</strong> &nbsp;·&nbsp; Titik sekolah menyesuaikan filter jenjang yang dipilih · <strong>Klik titik untuk detail nama sekolah</strong></span>
+    </div>
+  </section>
+
+  <!-- ═══════════ PREDIKSI KEBUTUHAN GURU ═══════════ -->
+  <section class="ccard fade-up" id="predSection">
+    <div class="flex flex-wrap items-start justify-between gap-3 mb-5">
+      <div>
+        <p class="ctitle">🔮 Prediksi Kebutuhan Guru Tahun 2026/2027</p>
+        <p class="csub">Proyeksi berbasis tren 3 tahun (2023–2025) dengan target rasio ideal 1:20</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Jenjang:</span>
+        <select id="predLevel" class="ysel" onchange="updPrediksi()">
+          <option value="SMA">SMA</option>
+          <option value="SMK">SMK</option>
+          <option value="SMP">SMP</option>
+          <option value="SD">SD</option>
+        </select>
+      </div>
+    </div>
+    <!-- Summary cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5" id="predCards"></div>
+    <!-- Chart -->
+    <div style="position:relative;height:320px;" class="mb-4"><canvas id="predChart"></canvas></div>
+    <!-- Table -->
+    <div class="tscroll mt-2">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-xs uppercase tracking-wide text-white">
+            <th class="text-left px-4 py-3" style="background:#1e293b;border-radius:10px 0 0 0">Kabupaten/Kota</th>
+            <th class="text-right px-3 py-3" style="background:#1e293b">Guru 2025</th>
+            <th class="text-right px-3 py-3" style="background:#1e293b">Murid Pred 2026</th>
+            <th class="text-right px-3 py-3" style="background:#1e293b">Guru Dibutuhkan</th>
+            <th class="text-right px-3 py-3" style="background:#1e293b">Tambah/Kurang</th>
+            <th class="text-right px-3 py-3" style="background:#1e293b;border-radius:0 10px 0 0">Status</th>
+          </tr>
+        </thead>
+        <tbody id="predBody"></tbody>
+      </table>
+    </div>
+  </section>
 </main>
 <footer class="max-w-7xl mx-auto px-5 pb-8 text-center text-xs text-slate-400 mt-2">
-  Sumber: Kemdikbud / Kemendikdasmen RI · Jawa Tengah 2023–2025 · Dashboard v3.0
+  Sumber: Kemdikbud / Kemendikdasmen RI · Jawa Tengah 2023–2025 · Dashboard v4.0 · Peta Rasio + Prediksi Guru
 </footer>
 
 <script>
@@ -359,6 +430,109 @@ thead th{position:sticky;top:0;z-index:5;}
 // DATA RIIL — langsung dari CSV
 // ═══════════════════════════════════════════════════════
 const DB = {
+  SMK: {
+    2023:[
+      {kab:"Cilacap", n:7,s:60,t:67,g:2150,mN:11695,mS:31604,mT:43299},
+      {kab:"Banyumas", n:10,s:70,t:80,g:2464,mN:12207,mS:37279,mT:49486},
+      {kab:"Purbalingga", n:12,s:22,t:34,g:1207,mN:13390,mS:9805,mT:23195},
+      {kab:"Banjarnegara", n:9,s:18,t:27,g:956,mN:8726,mS:10469,mT:19195},
+      {kab:"Kebumen", n:8,s:58,t:66,g:2051,mN:11006,mS:25309,mT:36315},
+      {kab:"Purworejo", n:7,s:33,t:40,g:1167,mN:6813,mS:11032,mT:17845},
+      {kab:"Wonosobo", n:8,s:22,t:30,g:861,mN:8210,mS:6750,mT:14960},
+      {kab:"Magelang", n:3,s:42,t:45,g:1178,mN:3283,mS:18043,mT:21326},
+      {kab:"Boyolali", n:12,s:30,t:42,g:1339,mN:12805,mS:9062,mT:21867},
+      {kab:"Klaten", n:11,s:37,t:48,g:1707,mN:13979,mS:14658,mT:28637},
+      {kab:"Sukoharjo", n:6,s:26,t:32,g:1147,mN:7650,mS:11736,mT:19386},
+      {kab:"Wonogiri", n:8,s:36,t:44,g:1234,mN:8076,mS:13250,mT:21326},
+      {kab:"Karanganyar", n:7,s:26,t:33,g:1078,mN:7939,mS:10572,mT:18511},
+      {kab:"Sragen", n:12,s:42,t:54,g:1784,mN:14702,mS:13271,mT:27973},
+      {kab:"Grobogan", n:3,s:53,t:56,g:1361,mN:5098,mS:21343,mT:26441},
+      {kab:"Blora", n:6,s:48,t:54,g:1260,mN:6819,mS:14423,mT:21242},
+      {kab:"Rembang", n:6,s:21,t:27,g:724,mN:4869,mS:6800,mT:11669},
+      {kab:"Pati", n:6,s:41,t:47,g:1419,mN:7022,mS:16181,mT:23203},
+      {kab:"Kudus", n:3,s:26,t:29,g:1011,mN:4032,mS:14531,mT:18563},
+      {kab:"Jepara", n:9,s:40,t:49,g:1388,mN:10761,mS:11168,mT:21929},
+      {kab:"Demak", n:4,s:54,t:58,g:1075,mN:4692,mS:12214,mT:16906},
+      {kab:"Semarang", n:9,s:34,t:43,g:1231,mN:12055,mS:9372,mT:21427},
+      {kab:"Temanggung", n:6,s:15,t:21,g:753,mN:6977,mS:7731,mT:14708},
+      {kab:"Kendal", n:7,s:40,t:47,g:1323,mN:8904,mS:15601,mT:24505},
+      {kab:"Batang", n:4,s:25,t:29,g:754,mN:4955,mS:9618,mT:14573},
+      {kab:"Pekalongan", n:4,s:29,t:33,g:1189,mN:4852,mS:15590,mT:20442},
+      {kab:"Pemalang", n:4,s:47,t:51,g:1686,mN:7788,mS:25745,mT:33533},
+      {kab:"Tegal", n:7,s:56,t:63,g:2176,mN:13224,mS:26484,mT:39708},
+      {kab:"Brebes", n:6,s:85,t:91,g:2300,mN:7353,mS:32571,mT:39924},
+      {kab:"Kota Magelang", n:3,s:15,t:18,g:546,mN:4539,mS:3163,mT:7702},
+      {kab:"Kota Surakarta", n:9,s:39,t:48,g:1575,mN:14855,mS:8185,mT:23040},
+      {kab:"Kota Salatiga", n:3,s:16,t:19,g:571,mN:4902,mS:3373,mT:8275},
+      {kab:"Kota Semarang", n:12,s:71,t:83,g:2298,mN:17543,mS:18974,mT:36517},
+      {kab:"Kota Pekalongan", n:4,s:9,t:13,g:495,mN:4585,mS:3483,mT:8068},
+      {kab:"Kota Tegal", n:4,s:16,t:20,g:634,mN:4256,mS:4467,mT:8723},
+    ],
+    2024:[
+      {kab:"Sukoharjo", n:6,s:26,t:32,g:1147,mN:7750,mS:12007,mT:19757},
+      {kab:"Wonogiri", n:8,s:36,t:44,g:1232,mN:8116,mS:13628,mT:21744},
+      {kab:"Karanganyar", n:7,s:26,t:33,g:1077,mN:7976,mS:10755,mT:18731},
+      {kab:"Sragen", n:12,s:42,t:54,g:1769,mN:14807,mS:13622,mT:28429},
+      {kab:"Grobogan", n:3,s:53,t:56,g:1356,mN:5140,mS:22291,mT:27431},
+      {kab:"Blora", n:6,s:48,t:54,g:1265,mN:6978,mS:14939,mT:21917},
+      {kab:"Rembang", n:6,s:21,t:27,g:722,mN:4946,mS:6990,mT:11936},
+      {kab:"Pati", n:6,s:41,t:47,g:1434,mN:7200,mS:16804,mT:24004},
+      {kab:"Kudus", n:3,s:26,t:29,g:1008,mN:4100,mS:15111,mT:19211},
+      {kab:"Jepara", n:9,s:40,t:49,g:1398,mN:10895,mS:11531,mT:22426},
+      {kab:"Demak", n:4,s:54,t:58,g:1072,mN:4789,mS:12509,mT:17298},
+      {kab:"Semarang", n:9,s:34,t:43,g:1227,mN:12167,mS:9646,mT:21813},
+      {kab:"Temanggung", n:6,s:15,t:21,g:761,mN:7138,mS:7865,mT:15003},
+      {kab:"Kendal", n:7,s:40,t:47,g:1326,mN:9118,mS:16129,mT:25247},
+      {kab:"Batang", n:4,s:25,t:29,g:765,mN:5109,mS:10014,mT:15123},
+      {kab:"Pekalongan", n:4,s:29,t:33,g:1191,mN:4980,mS:16181,mT:21161},
+      {kab:"Pemalang", n:4,s:47,t:51,g:1699,mN:7930,mS:26676,mT:34606},
+      {kab:"Tegal", n:7,s:56,t:63,g:2182,mN:13441,mS:27355,mT:40796},
+      {kab:"Brebes", n:6,s:85,t:91,g:2286,mN:7480,mS:34080,mT:41560},
+      {kab:"Kota Magelang", n:3,s:15,t:18,g:541,mN:4544,mS:3154,mT:7698},
+      {kab:"Kota Surakarta", n:9,s:39,t:48,g:1550,mN:14908,mS:8346,mT:23254},
+      {kab:"Kota Salatiga", n:3,s:16,t:19,g:570,mN:4949,mS:3438,mT:8387},
+      {kab:"Kota Semarang", n:12,s:71,t:83,g:2276,mN:17716,mS:19495,mT:37211},
+      {kab:"Kota Pekalongan", n:4,s:9,t:13,g:487,mN:4660,mS:3453,mT:8113},
+      {kab:"Kota Tegal", n:4,s:16,t:20,g:599,mN:4214,mS:4723,mT:8937},
+    ],
+    2025:[
+      {kab:"Cilacap", n:7,s:60,t:67,g:2234,mN:11858,mS:33046,mT:44904},
+      {kab:"Banyumas", n:10,s:69,t:79,g:2532,mN:12611,mS:39379,mT:51990},
+      {kab:"Purbalingga", n:12,s:21,t:33,g:1247,mN:13610,mS:11537,mT:25147},
+      {kab:"Banjarnegara", n:9,s:17,t:26,g:986,mN:9155,mS:12244,mT:21399},
+      {kab:"Kebumen", n:8,s:56,t:64,g:2034,mN:11211,mS:26303,mT:37514},
+      {kab:"Purworejo", n:7,s:33,t:40,g:1141,mN:6864,mS:11590,mT:18454},
+      {kab:"Wonosobo", n:8,s:22,t:30,g:907,mN:8528,mS:7224,mT:15752},
+      {kab:"Magelang", n:3,s:42,t:45,g:1179,mN:3337,mS:18858,mT:22195},
+      {kab:"Boyolali", n:12,s:30,t:42,g:1324,mN:13445,mS:9765,mT:23210},
+      {kab:"Klaten", n:11,s:36,t:47,g:1580,mN:13875,mS:15247,mT:29122},
+      {kab:"Sukoharjo", n:6,s:26,t:32,g:1160,mN:7828,mS:12264,mT:20092},
+      {kab:"Wonogiri", n:8,s:36,t:44,g:1245,mN:8211,mS:13980,mT:22191},
+      {kab:"Karanganyar", n:7,s:26,t:33,g:1094,mN:8099,mS:10986,mT:19085},
+      {kab:"Sragen", n:12,s:42,t:54,g:1798,mN:14988,mS:13935,mT:28923},
+      {kab:"Grobogan", n:3,s:52,t:55,g:1380,mN:5214,mS:22915,mT:28129},
+      {kab:"Blora", n:6,s:47,t:53,g:1287,mN:7095,mS:15384,mT:22479},
+      {kab:"Rembang", n:6,s:21,t:27,g:739,mN:5027,mS:7245,mT:12272},
+      {kab:"Pati", n:6,s:41,t:47,g:1458,mN:7311,mS:17122,mT:24433},
+      {kab:"Kudus", n:3,s:26,t:29,g:1027,mN:4178,mS:15440,mT:19618},
+      {kab:"Jepara", n:9,s:40,t:49,g:1415,mN:11044,mS:11876,mT:22920},
+      {kab:"Demak", n:4,s:53,t:57,g:1089,mN:4865,mS:12822,mT:17687},
+      {kab:"Semarang", n:9,s:34,t:43,g:1246,mN:12335,mS:9918,mT:22253},
+      {kab:"Temanggung", n:6,s:15,t:21,g:778,mN:7241,mS:8010,mT:15251},
+      {kab:"Kendal", n:7,s:40,t:47,g:1352,mN:9276,mS:16588,mT:25864},
+      {kab:"Batang", n:4,s:25,t:29,g:781,mN:5196,mS:10322,mT:15518},
+      {kab:"Pekalongan", n:4,s:29,t:33,g:1215,mN:5077,mS:16502,mT:21579},
+      {kab:"Pemalang", n:4,s:47,t:51,g:1725,mN:8088,mS:27240,mT:35328},
+      {kab:"Tegal", n:7,s:55,t:62,g:2205,mN:13620,mS:27931,mT:41551},
+      {kab:"Brebes", n:6,s:84,t:90,g:2321,mN:7610,mS:34755,mT:42365},
+      {kab:"Kota Magelang", n:3,s:15,t:18,g:553,mN:4591,mS:3226,mT:7817},
+      {kab:"Kota Surakarta", n:9,s:39,t:48,g:1588,mN:15055,mS:8561,mT:23616},
+      {kab:"Kota Salatiga", n:3,s:16,t:19,g:582,mN:5014,mS:3521,mT:8535},
+      {kab:"Kota Semarang", n:12,s:70,t:82,g:2314,mN:17988,mS:19933,mT:37921},
+      {kab:"Kota Pekalongan", n:4,s:9,t:13,g:501,mN:4725,mS:3512,mT:8237},
+      {kab:"Kota Tegal", n:4,s:16,t:20,g:618,mN:4291,mS:4860,mT:9151},
+    ],
+  },
   SMA: {
     2023: [
       {kab:"Cilacap",         n:18,s:24,t:42,g:1095,mN:15340,mS:4016, mT:19356},
@@ -707,6 +881,7 @@ let bInst=null, dInst=null, tInst=null;
 // Color configs
 const CFG = {
   SMA:{c1:'#1d4ed8',c2:'#93c5fd',c3:'#0ea5e9',tag:'tsma',dot:'bg-blue-300'},
+  SMK:{c1:'#0891b2',c2:'#67e8f9',c3:'#06b6d4',tag:'tsmk',dot:'bg-cyan-300'},
   SMP:{c1:'#0891b2',c2:'#67e8f9',c3:'#06b6d4',tag:'tsmp',dot:'bg-cyan-300'},
   SD:{c1:'#0891b2',c2:'#67e8f9',c3:'#06b6d4',tag:'tsd',dot:'bg-coral-300'},
 };
@@ -1112,6 +1287,831 @@ document.getElementById('srch').addEventListener('input',e=>updTable(e.target.va
 
 // ── Init ──────────────────────────────────────────────────────
 refresh();
+
+
+// ═══════════════════════════════════════════════════════════════
+// KOORDINAT KABUPATEN JAWA TENGAH (centroid approximate)
+// ═══════════════════════════════════════════════════════════════
+const KAB_COORDS = {
+  "Cilacap":         [-7.7267, 108.8304],
+  "Banyumas":        [-7.5179, 109.2985],
+  "Purbalingga":     [-7.3907, 109.3649],
+  "Banjarnegara":    [-7.3904, 109.6907],
+  "Kebumen":         [-7.6730, 109.6522],
+  "Purworejo":       [-7.7161, 110.0195],
+  "Wonosobo":        [-7.3615, 109.9054],
+  "Magelang":        [-7.4797, 110.2177],
+  "Boyolali":        [-7.5322, 110.5983],
+  "Klaten":          [-7.7063, 110.5997],
+  "Sukoharjo":       [-7.6871, 110.8423],
+  "Wonogiri":        [-7.8225, 110.9227],
+  "Karanganyar":     [-7.5959, 111.0299],
+  "Sragen":          [-7.4261, 111.0283],
+  "Grobogan":        [-7.0547, 110.8964],
+  "Blora":           [-6.9693, 111.4144],
+  "Rembang":         [-6.7053, 111.3425],
+  "Pati":            [-6.7530, 111.0395],
+  "Kudus":           [-6.8048, 110.8415],
+  "Jepara":          [-6.5935, 110.6680],
+  "Demak":           [-6.8927, 110.6386],
+  "Semarang":        [-7.0997, 110.4381],
+  "Temanggung":      [-7.3125, 110.1711],
+  "Kendal":          [-6.9225, 110.1979],
+  "Batang":          [-6.9092, 109.7319],
+  "Pekalongan":      [-7.0494, 109.6516],
+  "Pemalang":        [-6.8943, 109.3796],
+  "Tegal":           [-7.0062, 109.1256],
+  "Brebes":          [-6.8717, 108.9218],
+  "Kota Magelang":   [-7.4700, 110.2178],
+  "Kota Surakarta":  [-7.5755, 110.8243],
+  "Kota Salatiga":   [-7.3305, 110.5082],
+  "Kota Semarang":   [-6.9932, 110.4203],
+  "Kota Pekalongan": [-6.8885, 109.6753],
+  "Kota Tegal":      [-6.8694, 109.1402],
+};
+
+// Sample school locations (representative — distributed across kab/kota)
+const SCHOOL_LOCATIONS = {
+  SD: [
+    // Banyumas
+    {name:"SDN 1 Purwokerto Selatan", kab:"Banyumas", lat:-7.4306, lng:109.2385},
+    {name:"SDN 2 Purwokerto Utara", kab:"Banyumas", lat:-7.4180, lng:109.2420},
+    {name:"SDN Karangklesem", kab:"Banyumas", lat:-7.4420, lng:109.2500},
+    {name:"SDN Sokanegara", kab:"Banyumas", lat:-7.4100, lng:109.2600},
+    {name:"SDN 1 Ajibarang", kab:"Banyumas", lat:-7.3950, lng:109.0650},
+    // Cilacap
+    {name:"SDN 1 Cilacap", kab:"Cilacap", lat:-7.7300, lng:109.0150},
+    {name:"SDN Jeruklegi Wetan", kab:"Cilacap", lat:-7.6800, lng:108.9800},
+    {name:"SDN 2 Kroya", kab:"Cilacap", lat:-7.6300, lng:109.2500},
+    {name:"SDN 1 Majenang", kab:"Cilacap", lat:-7.3100, lng:108.7800},
+    // Semarang (Kota)
+    {name:"SDN Semarang Tengah 01", kab:"Kota Semarang", lat:-6.9820, lng:110.4154},
+    {name:"SDN Karangayu 02", kab:"Kota Semarang", lat:-7.0010, lng:110.3900},
+    {name:"SDN Pleburan 01", kab:"Kota Semarang", lat:-6.9950, lng:110.4100},
+    {name:"SDN Srondol Wetan 01", kab:"Kota Semarang", lat:-7.0600, lng:110.4000},
+    {name:"SDN Banyumanik 01", kab:"Kota Semarang", lat:-7.0680, lng:110.4280},
+    // Surakarta
+    {name:"SDN 1 Serengan", kab:"Kota Surakarta", lat:-7.5800, lng:110.8100},
+    {name:"SDN Margoyudan", kab:"Kota Surakarta", lat:-7.5600, lng:110.8200},
+    {name:"SDN Karangasem", kab:"Kota Surakarta", lat:-7.5500, lng:110.8350},
+    // Klaten
+    {name:"SDN 1 Klaten Tengah", kab:"Klaten", lat:-7.7050, lng:110.6020},
+    {name:"SDN 2 Trucuk", kab:"Klaten", lat:-7.6700, lng:110.6400},
+    {name:"SDN Prambanan", kab:"Klaten", lat:-7.7520, lng:110.4950},
+    // Brebes
+    {name:"SDN 1 Brebes", kab:"Brebes", lat:-6.8730, lng:108.9260},
+    {name:"SDN 1 Bumiayu", kab:"Brebes", lat:-7.2300, lng:108.9600},
+    {name:"SDN Larangan", kab:"Brebes", lat:-6.8200, lng:108.7800},
+    // Kudus
+    {name:"SDN 1 Kudus", kab:"Kudus", lat:-6.8060, lng:110.8440},
+    {name:"SDN 2 Barongan", kab:"Kudus", lat:-6.7900, lng:110.8600},
+    // Pati
+    {name:"SDN 1 Pati Wetan", kab:"Pati", lat:-6.7540, lng:111.0380},
+    {name:"SDN 1 Tayu", kab:"Pati", lat:-6.5700, lng:111.0500},
+    // Jepara
+    {name:"SDN 1 Jepara", kab:"Jepara", lat:-6.5920, lng:110.6700},
+    {name:"SDN 1 Welahan", kab:"Jepara", lat:-6.7400, lng:110.7300},
+    // Tegal (Kota)
+    {name:"SDN Pekauman 1", kab:"Kota Tegal", lat:-6.8690, lng:109.1400},
+    {name:"SDN Panggung", kab:"Kota Tegal", lat:-6.8600, lng:109.1250},
+    // Pemalang
+    {name:"SDN 1 Pemalang", kab:"Pemalang", lat:-6.8900, lng:109.3780},
+    {name:"SDN 1 Comal", kab:"Pemalang", lat:-6.9100, lng:109.5000},
+    // Magelang (Kota)
+    {name:"SDN Magelang Tengah 01", kab:"Kota Magelang", lat:-7.4710, lng:110.2180},
+    {name:"SDN Rejowinangun 1", kab:"Kota Magelang", lat:-7.4850, lng:110.2250},
+    // Kebumen
+    {name:"SDN 1 Kebumen", kab:"Kebumen", lat:-7.6674, lng:109.6585},
+    {name:"SDN 1 Gombong", kab:"Kebumen", lat:-7.6100, lng:109.5100},
+    // Pekalongan (Kota)
+    {name:"SDN Pekalongan Selatan 01", kab:"Kota Pekalongan", lat:-6.8950, lng:109.6780},
+    {name:"SDN Bendan 1", kab:"Kota Pekalongan", lat:-6.8800, lng:109.6600},
+    // Salatiga
+    {name:"SDN Salatiga 01", kab:"Kota Salatiga", lat:-7.3310, lng:110.5090},
+    {name:"SDN Mangunsari 01", kab:"Kota Salatiga", lat:-7.3450, lng:110.5200},
+    // Grobogan
+    {name:"SDN 1 Purwodadi", kab:"Grobogan", lat:-7.0920, lng:110.9170},
+    {name:"SDN Gubug", kab:"Grobogan", lat:-7.0100, lng:110.7900},
+    // Demak
+    {name:"SDN 1 Demak", kab:"Demak", lat:-6.8940, lng:110.6410},
+    {name:"SDN 1 Mranggen", kab:"Demak", lat:-6.9800, lng:110.5400},
+    // Boyolali
+    {name:"SDN 1 Boyolali", kab:"Boyolali", lat:-7.5322, lng:110.5983},
+    {name:"SDN 1 Ampel", kab:"Boyolali", lat:-7.3800, lng:110.6000},
+    // Sragen
+    {name:"SDN 1 Sragen", kab:"Sragen", lat:-7.4270, lng:111.0270},
+    {name:"SDN 1 Gondang", kab:"Sragen", lat:-7.3800, lng:111.1200},
+    // Rembang
+    {name:"SDN 1 Rembang", kab:"Rembang", lat:-6.7060, lng:111.3430},
+    {name:"SDN 1 Lasem", kab:"Rembang", lat:-6.6900, lng:111.4500},
+    // Blora
+    {name:"SDN 1 Blora", kab:"Blora", lat:-6.9700, lng:111.4140},
+    {name:"SDN 1 Cepu", kab:"Blora", lat:-7.1500, lng:111.5900},
+    // Wonosobo
+    {name:"SDN 1 Wonosobo", kab:"Wonosobo", lat:-7.3615, lng:109.9054},
+    {name:"SDN 1 Kertek", kab:"Wonosobo", lat:-7.2900, lng:109.9500},
+    // Temanggung
+    {name:"SDN 1 Temanggung", kab:"Temanggung", lat:-7.3125, lng:110.1711},
+    {name:"SDN 1 Parakan", kab:"Temanggung", lat:-7.2600, lng:110.0800},
+    // Kendal
+    {name:"SDN 1 Kendal", kab:"Kendal", lat:-6.9225, lng:110.1979},
+    {name:"SDN 1 Weleri", kab:"Kendal", lat:-6.9700, lng:110.0100},
+    // Sukoharjo
+    {name:"SDN 1 Sukoharjo", kab:"Sukoharjo", lat:-7.6871, lng:110.8423},
+    {name:"SDN 1 Kartasura", kab:"Sukoharjo", lat:-7.5700, lng:110.7500},
+    // Wonogiri
+    {name:"SDN 1 Wonogiri", kab:"Wonogiri", lat:-7.8225, lng:110.9227},
+    {name:"SDN 1 Baturetno", kab:"Wonogiri", lat:-7.9500, lng:110.9900},
+    // Karanganyar
+    {name:"SDN 1 Karanganyar", kab:"Karanganyar", lat:-7.5959, lng:111.0299},
+    {name:"SDN 1 Kebakkramat", kab:"Karanganyar", lat:-7.5500, lng:110.9600},
+    // Purworejo
+    {name:"SDN 1 Purworejo", kab:"Purworejo", lat:-7.7161, lng:110.0195},
+    {name:"SDN 1 Kutoarjo", kab:"Purworejo", lat:-7.7300, lng:109.9100},
+    // Banjarnegara
+    {name:"SDN 1 Banjarnegara", kab:"Banjarnegara", lat:-7.3904, lng:109.6907},
+    {name:"SDN 1 Purwareja Klampok", kab:"Banjarnegara", lat:-7.4400, lng:109.5500},
+    // Purbalingga
+    {name:"SDN 1 Purbalingga", kab:"Purbalingga", lat:-7.3907, lng:109.3649},
+    {name:"SDN 1 Bukateja", kab:"Purbalingga", lat:-7.3400, lng:109.4300},
+    // Magelang (Kab)
+    {name:"SDN 1 Mungkid", kab:"Magelang", lat:-7.5000, lng:110.2300},
+    {name:"SDN 1 Muntilan", kab:"Magelang", lat:-7.5900, lng:110.2000},
+    // Batang
+    {name:"SDN 1 Batang", kab:"Batang", lat:-6.9092, lng:109.7319},
+    {name:"SDN 1 Limpung", kab:"Batang", lat:-6.9700, lng:110.0000},
+    // Pekalongan (Kab)
+    {name:"SDN 1 Kajen", kab:"Pekalongan", lat:-7.0494, lng:109.6516},
+    {name:"SDN 1 Kedungwuni", kab:"Pekalongan", lat:-6.9500, lng:109.6200},
+    // Semarang (Kab)
+    {name:"SDN 1 Ungaran", kab:"Semarang", lat:-7.1300, lng:110.4100},
+    {name:"SDN 1 Ambarawa", kab:"Semarang", lat:-7.2600, lng:110.4000},
+  ],
+  SMP: [
+    // Banyumas
+    {name:"SMPN 1 Purwokerto", kab:"Banyumas", lat:-7.4275, lng:109.2350},
+    {name:"SMPN 2 Purwokerto", kab:"Banyumas", lat:-7.4150, lng:109.2480},
+    {name:"SMPN 1 Ajibarang", kab:"Banyumas", lat:-7.3960, lng:109.0680},
+    {name:"SMPN 1 Sokaraja", kab:"Banyumas", lat:-7.4500, lng:109.3100},
+    // Cilacap
+    {name:"SMPN 1 Cilacap", kab:"Cilacap", lat:-7.7280, lng:109.0180},
+    {name:"SMPN 2 Cilacap", kab:"Cilacap", lat:-7.7100, lng:109.0350},
+    {name:"SMPN 1 Kroya", kab:"Cilacap", lat:-7.6250, lng:109.2550},
+    {name:"SMPN 1 Majenang", kab:"Cilacap", lat:-7.3050, lng:108.7850},
+    // Semarang (Kota)
+    {name:"SMPN 2 Semarang", kab:"Kota Semarang", lat:-6.9900, lng:110.4230},
+    {name:"SMPN 3 Semarang", kab:"Kota Semarang", lat:-6.9800, lng:110.4050},
+    {name:"SMPN 5 Semarang", kab:"Kota Semarang", lat:-7.0050, lng:110.4050},
+    {name:"SMPN 11 Semarang", kab:"Kota Semarang", lat:-7.0200, lng:110.3950},
+    {name:"SMPN 16 Semarang", kab:"Kota Semarang", lat:-6.9750, lng:110.4400},
+    // Surakarta
+    {name:"SMPN 1 Surakarta", kab:"Kota Surakarta", lat:-7.5780, lng:110.8270},
+    {name:"SMPN 5 Surakarta", kab:"Kota Surakarta", lat:-7.5650, lng:110.8150},
+    {name:"SMPN 7 Surakarta", kab:"Kota Surakarta", lat:-7.5600, lng:110.8300},
+    // Klaten
+    {name:"SMPN 1 Klaten", kab:"Klaten", lat:-7.7040, lng:110.6000},
+    {name:"SMPN 2 Klaten", kab:"Klaten", lat:-7.7150, lng:110.6100},
+    {name:"SMPN 1 Delanggu", kab:"Klaten", lat:-7.6450, lng:110.6700},
+    // Brebes
+    {name:"SMPN 1 Brebes", kab:"Brebes", lat:-6.8700, lng:108.9230},
+    {name:"SMPN 1 Bumiayu", kab:"Brebes", lat:-7.2250, lng:108.9650},
+    {name:"SMPN 2 Brebes", kab:"Brebes", lat:-6.8800, lng:108.9100},
+    // Pati
+    {name:"SMPN 1 Pati", kab:"Pati", lat:-6.7550, lng:111.0400},
+    {name:"SMPN 2 Pati", kab:"Pati", lat:-6.7700, lng:111.0300},
+    {name:"SMPN 1 Juwana", kab:"Pati", lat:-6.7200, lng:111.1500},
+    // Kudus
+    {name:"SMPN 1 Kudus", kab:"Kudus", lat:-6.8070, lng:110.8460},
+    {name:"SMPN 2 Kudus", kab:"Kudus", lat:-6.7950, lng:110.8580},
+    // Grobogan
+    {name:"SMPN 1 Purwodadi", kab:"Grobogan", lat:-7.0940, lng:110.9200},
+    {name:"SMPN 1 Godong", kab:"Grobogan", lat:-7.0300, lng:110.8100},
+    // Jepara
+    {name:"SMPN 1 Jepara", kab:"Jepara", lat:-6.5940, lng:110.6720},
+    {name:"SMPN 2 Jepara", kab:"Jepara", lat:-6.6100, lng:110.6600},
+    {name:"SMPN 1 Pecangaan", kab:"Jepara", lat:-6.7150, lng:110.7200},
+    // Kendal
+    {name:"SMPN 1 Kendal", kab:"Kendal", lat:-6.9240, lng:110.1990},
+    {name:"SMPN 2 Kendal", kab:"Kendal", lat:-6.9350, lng:110.2100},
+    // Demak
+    {name:"SMPN 1 Demak", kab:"Demak", lat:-6.8930, lng:110.6400},
+    {name:"SMPN 2 Demak", kab:"Demak", lat:-6.9050, lng:110.6500},
+    // Pemalang
+    {name:"SMPN 1 Pemalang", kab:"Pemalang", lat:-6.8950, lng:109.3810},
+    {name:"SMPN 2 Pemalang", kab:"Pemalang", lat:-6.9050, lng:109.3700},
+    // Tegal (Kota)
+    {name:"SMPN 1 Tegal", kab:"Kota Tegal", lat:-6.8700, lng:109.1390},
+    {name:"SMPN 3 Tegal", kab:"Kota Tegal", lat:-6.8600, lng:109.1300},
+    // Magelang (Kota)
+    {name:"SMPN 1 Magelang", kab:"Kota Magelang", lat:-7.4680, lng:110.2200},
+    {name:"SMPN 2 Magelang", kab:"Kota Magelang", lat:-7.4750, lng:110.2300},
+    // Wonogiri
+    {name:"SMPN 1 Wonogiri", kab:"Wonogiri", lat:-7.8230, lng:110.9210},
+    {name:"SMPN 1 Baturetno", kab:"Wonogiri", lat:-7.9550, lng:110.9850},
+    // Sragen
+    {name:"SMPN 1 Sragen", kab:"Sragen", lat:-7.4270, lng:111.0300},
+    {name:"SMPN 2 Sragen", kab:"Sragen", lat:-7.4400, lng:111.0200},
+    // Karanganyar
+    {name:"SMPN 1 Karanganyar", kab:"Karanganyar", lat:-7.5970, lng:111.0310},
+    {name:"SMPN 1 Tasikmadu", kab:"Karanganyar", lat:-7.5600, lng:110.9900},
+    // Salatiga
+    {name:"SMPN 1 Salatiga", kab:"Kota Salatiga", lat:-7.3320, lng:110.5080},
+    {name:"SMPN 2 Salatiga", kab:"Kota Salatiga", lat:-7.3400, lng:110.5150},
+    // Sukoharjo
+    {name:"SMPN 1 Sukoharjo", kab:"Sukoharjo", lat:-7.6900, lng:110.8380},
+    {name:"SMPN 1 Baki", kab:"Sukoharjo", lat:-7.6400, lng:110.8000},
+    // Boyolali
+    {name:"SMPN 1 Boyolali", kab:"Boyolali", lat:-7.5310, lng:110.6010},
+    {name:"SMPN 1 Simo", kab:"Boyolali", lat:-7.4400, lng:110.5500},
+    // Kebumen
+    {name:"SMPN 1 Kebumen", kab:"Kebumen", lat:-7.6700, lng:109.6600},
+    {name:"SMPN 2 Kebumen", kab:"Kebumen", lat:-7.6800, lng:109.6700},
+    // Purworejo
+    {name:"SMPN 1 Purworejo", kab:"Purworejo", lat:-7.7200, lng:110.0250},
+    {name:"SMPN 1 Kutoarjo", kab:"Purworejo", lat:-7.7250, lng:109.9150},
+    // Wonosobo
+    {name:"SMPN 1 Wonosobo", kab:"Wonosobo", lat:-7.3620, lng:109.9060},
+    {name:"SMPN 2 Wonosobo", kab:"Wonosobo", lat:-7.3700, lng:109.9000},
+    // Temanggung
+    {name:"SMPN 1 Temanggung", kab:"Temanggung", lat:-7.3125, lng:110.1711},
+    {name:"SMPN 2 Temanggung", kab:"Temanggung", lat:-7.3200, lng:110.1800},
+    // Batang
+    {name:"SMPN 1 Batang", kab:"Batang", lat:-6.9100, lng:109.7350},
+    {name:"SMPN 1 Subah", kab:"Batang", lat:-6.9500, lng:109.9200},
+    // Pekalongan (Kab)
+    {name:"SMPN 1 Kajen", kab:"Pekalongan", lat:-7.0500, lng:109.6550},
+    {name:"SMPN 1 Kedungwuni", kab:"Pekalongan", lat:-6.9530, lng:109.6250},
+    // Pekalongan (Kota)
+    {name:"SMPN 1 Pekalongan", kab:"Kota Pekalongan", lat:-6.8900, lng:109.6770},
+    {name:"SMPN 2 Pekalongan", kab:"Kota Pekalongan", lat:-6.8800, lng:109.6650},
+    // Rembang
+    {name:"SMPN 1 Rembang", kab:"Rembang", lat:-6.7100, lng:111.3450},
+    {name:"SMPN 1 Lasem", kab:"Rembang", lat:-6.6900, lng:111.4550},
+    // Blora
+    {name:"SMPN 1 Blora", kab:"Blora", lat:-6.9750, lng:111.4180},
+    {name:"SMPN 1 Cepu", kab:"Blora", lat:-7.1450, lng:111.5950},
+    // Banjarnegara
+    {name:"SMPN 1 Banjarnegara", kab:"Banjarnegara", lat:-7.3900, lng:109.6950},
+    {name:"SMPN 1 Mandiraja", kab:"Banjarnegara", lat:-7.4500, lng:109.5000},
+    // Purbalingga
+    {name:"SMPN 1 Purbalingga", kab:"Purbalingga", lat:-7.3900, lng:109.3650},
+    {name:"SMPN 1 Bukateja", kab:"Purbalingga", lat:-7.3400, lng:109.4350},
+    // Magelang (Kab)
+    {name:"SMPN 1 Mungkid", kab:"Magelang", lat:-7.5050, lng:110.2350},
+    {name:"SMPN 1 Muntilan", kab:"Magelang", lat:-7.5950, lng:110.2050},
+    // Semarang (Kab)
+    {name:"SMPN 1 Ungaran", kab:"Semarang", lat:-7.1350, lng:110.4150},
+    {name:"SMPN 1 Ambarawa", kab:"Semarang", lat:-7.2650, lng:110.4050},
+  ],
+  SMA: [
+    // Banyumas
+    {name:"SMAN 1 Purwokerto", kab:"Banyumas", lat:-7.4218, lng:109.2337},
+    {name:"SMAN 2 Purwokerto", kab:"Banyumas", lat:-7.4074, lng:109.2476},
+    {name:"SMAN 1 Ajibarang", kab:"Banyumas", lat:-7.3997, lng:109.0692},
+    {name:"SMAN 1 Sokaraja", kab:"Banyumas", lat:-7.4502, lng:109.3138},
+    // Cilacap
+    {name:"SMAN 1 Cilacap", kab:"Cilacap", lat:-7.7260, lng:109.0200},
+    {name:"SMAN 2 Cilacap", kab:"Cilacap", lat:-7.7150, lng:109.0320},
+    {name:"SMAN 1 Kroya", kab:"Cilacap", lat:-7.6280, lng:109.2580},
+    {name:"SMAN 1 Majenang", kab:"Cilacap", lat:-7.3020, lng:108.7900},
+    // Semarang (Kota)
+    {name:"SMAN 1 Semarang", kab:"Kota Semarang", lat:-6.9864, lng:110.4156},
+    {name:"SMAN 3 Semarang", kab:"Kota Semarang", lat:-6.9897, lng:110.4213},
+    {name:"SMAN 5 Semarang", kab:"Kota Semarang", lat:-7.0027, lng:110.4143},
+    {name:"SMAN 8 Semarang", kab:"Kota Semarang", lat:-7.0214, lng:110.3977},
+    {name:"SMAN 12 Semarang", kab:"Kota Semarang", lat:-7.0437, lng:110.4287},
+    // Surakarta
+    {name:"SMAN 1 Surakarta", kab:"Kota Surakarta", lat:-7.5584, lng:110.8252},
+    {name:"SMAN 2 Surakarta", kab:"Kota Surakarta", lat:-7.5614, lng:110.8195},
+    {name:"SMAN 4 Surakarta", kab:"Kota Surakarta", lat:-7.5726, lng:110.8153},
+    // Klaten
+    {name:"SMAN 1 Klaten", kab:"Klaten", lat:-7.7030, lng:110.5980},
+    {name:"SMAN 2 Klaten", kab:"Klaten", lat:-7.7150, lng:110.6080},
+    {name:"SMAN 1 Cawas", kab:"Klaten", lat:-7.7800, lng:110.7000},
+    // Brebes
+    {name:"SMAN 1 Brebes", kab:"Brebes", lat:-6.8720, lng:108.9270},
+    {name:"SMAN 1 Bumiayu", kab:"Brebes", lat:-7.2280, lng:108.9680},
+    {name:"SMAN 2 Brebes", kab:"Brebes", lat:-6.8600, lng:108.9150},
+    // Pati
+    {name:"SMAN 1 Pati", kab:"Pati", lat:-6.7540, lng:111.0430},
+    {name:"SMAN 2 Pati", kab:"Pati", lat:-6.7650, lng:111.0350},
+    {name:"SMAN 1 Tayu", kab:"Pati", lat:-6.5720, lng:111.0520},
+    // Kudus
+    {name:"SMAN 1 Kudus", kab:"Kudus", lat:-6.8050, lng:110.8480},
+    {name:"SMAN 2 Kudus", kab:"Kudus", lat:-6.7900, lng:110.8600},
+    // Grobogan
+    {name:"SMAN 1 Purwodadi", kab:"Grobogan", lat:-7.0920, lng:110.9200},
+    {name:"SMAN 1 Godong", kab:"Grobogan", lat:-7.0280, lng:110.8050},
+    // Jepara
+    {name:"SMAN 1 Jepara", kab:"Jepara", lat:-6.5950, lng:110.6690},
+    {name:"SMAN 2 Jepara", kab:"Jepara", lat:-6.6100, lng:110.6580},
+    // Kebumen
+    {name:"SMAN 1 Kebumen", kab:"Kebumen", lat:-7.6690, lng:109.6580},
+    {name:"SMAN 2 Kebumen", kab:"Kebumen", lat:-7.6800, lng:109.6700},
+    // Kendal
+    {name:"SMAN 1 Kendal", kab:"Kendal", lat:-6.9230, lng:110.2010},
+    {name:"SMAN 1 Weleri", kab:"Kendal", lat:-6.9700, lng:110.0150},
+    // Demak
+    {name:"SMAN 1 Demak", kab:"Demak", lat:-6.8920, lng:110.6380},
+    {name:"SMAN 2 Demak", kab:"Demak", lat:-6.9050, lng:110.6480},
+    // Pemalang
+    {name:"SMAN 1 Pemalang", kab:"Pemalang", lat:-6.8940, lng:109.3830},
+    {name:"SMAN 2 Pemalang", kab:"Pemalang", lat:-6.9050, lng:109.3750},
+    // Tegal (Kota)
+    {name:"SMAN 1 Tegal", kab:"Kota Tegal", lat:-6.8680, lng:109.1370},
+    {name:"SMAN 2 Tegal", kab:"Kota Tegal", lat:-6.8600, lng:109.1280},
+    // Wonogiri
+    {name:"SMAN 1 Wonogiri", kab:"Wonogiri", lat:-7.8240, lng:110.9230},
+    {name:"SMAN 1 Baturetno", kab:"Wonogiri", lat:-7.9520, lng:110.9920},
+    // Boyolali
+    {name:"SMAN 1 Boyolali", kab:"Boyolali", lat:-7.5310, lng:110.6010},
+    {name:"SMAN 1 Simo", kab:"Boyolali", lat:-7.4400, lng:110.5500},
+    // Sragen
+    {name:"SMAN 1 Sragen", kab:"Sragen", lat:-7.4260, lng:111.0290},
+    {name:"SMAN 2 Sragen", kab:"Sragen", lat:-7.4380, lng:111.0180},
+    // Karanganyar
+    {name:"SMAN 1 Karanganyar", kab:"Karanganyar", lat:-7.5970, lng:111.0320},
+    {name:"SMAN 1 Karangpandan", kab:"Karanganyar", lat:-7.6500, lng:111.0700},
+    // Salatiga
+    {name:"SMAN 1 Salatiga", kab:"Kota Salatiga", lat:-7.3290, lng:110.5100},
+    {name:"SMAN 2 Salatiga", kab:"Kota Salatiga", lat:-7.3400, lng:110.5200},
+    // Sukoharjo
+    {name:"SMAN 1 Sukoharjo", kab:"Sukoharjo", lat:-7.6900, lng:110.8380},
+    {name:"SMAN 1 Baki", kab:"Sukoharjo", lat:-7.6400, lng:110.7950},
+    // Magelang (Kota)
+    {name:"SMAN 1 Magelang", kab:"Kota Magelang", lat:-7.4670, lng:110.2220},
+    {name:"SMAN 2 Magelang", kab:"Kota Magelang", lat:-7.4780, lng:110.2300},
+    // Wonosobo
+    {name:"SMAN 1 Wonosobo", kab:"Wonosobo", lat:-7.3620, lng:109.9060},
+    {name:"SMAN 1 Sapuran", kab:"Wonosobo", lat:-7.2800, lng:109.9500},
+    // Temanggung
+    {name:"SMAN 1 Temanggung", kab:"Temanggung", lat:-7.3125, lng:110.1711},
+    {name:"SMAN 1 Parakan", kab:"Temanggung", lat:-7.2600, lng:110.0800},
+    // Purworejo
+    {name:"SMAN 1 Purworejo", kab:"Purworejo", lat:-7.7180, lng:110.0220},
+    {name:"SMAN 1 Kutoarjo", kab:"Purworejo", lat:-7.7270, lng:109.9150},
+    // Banjarnegara
+    {name:"SMAN 1 Banjarnegara", kab:"Banjarnegara", lat:-7.3900, lng:109.6950},
+    {name:"SMAN 1 Mandiraja", kab:"Banjarnegara", lat:-7.4500, lng:109.5050},
+    // Purbalingga
+    {name:"SMAN 1 Purbalingga", kab:"Purbalingga", lat:-7.3900, lng:109.3650},
+    {name:"SMAN 1 Bobotsari", kab:"Purbalingga", lat:-7.3200, lng:109.3200},
+    // Rembang
+    {name:"SMAN 1 Rembang", kab:"Rembang", lat:-6.7100, lng:111.3460},
+    {name:"SMAN 1 Lasem", kab:"Rembang", lat:-6.6920, lng:111.4580},
+    // Blora
+    {name:"SMAN 1 Blora", kab:"Blora", lat:-6.9750, lng:111.4180},
+    {name:"SMAN 1 Cepu", kab:"Blora", lat:-7.1450, lng:111.5950},
+    // Pekalongan (Kota)
+    {name:"SMAN 1 Pekalongan", kab:"Kota Pekalongan", lat:-6.8900, lng:109.6780},
+    {name:"SMAN 2 Pekalongan", kab:"Kota Pekalongan", lat:-6.8800, lng:109.6620},
+    // Batang
+    {name:"SMAN 1 Batang", kab:"Batang", lat:-6.9100, lng:109.7350},
+    {name:"SMAN 1 Bandar", kab:"Batang", lat:-6.9500, lng:109.9250},
+    // Semarang (Kab)
+    {name:"SMAN 1 Ungaran", kab:"Semarang", lat:-7.1350, lng:110.4120},
+    {name:"SMAN 1 Ambarawa", kab:"Semarang", lat:-7.2650, lng:110.4060},
+    // Magelang (Kab)
+    {name:"SMAN 1 Mungkid", kab:"Magelang", lat:-7.5050, lng:110.2350},
+    {name:"SMAN 1 Salaman", kab:"Magelang", lat:-7.6000, lng:110.0500},
+    // Pekalongan (Kab)
+    {name:"SMAN 1 Kajen", kab:"Pekalongan", lat:-7.0500, lng:109.6550},
+    {name:"SMAN 1 Sragi", kab:"Pekalongan", lat:-6.9400, lng:109.5800},
+  ],
+  SMK: [
+    // Banyumas
+    {name:"SMKN 1 Purwokerto", kab:"Banyumas", lat:-7.4260, lng:109.2380},
+    {name:"SMKN 2 Purwokerto", kab:"Banyumas", lat:-7.4120, lng:109.2500},
+    {name:"SMKN 1 Ajibarang", kab:"Banyumas", lat:-7.3970, lng:109.0720},
+    {name:"SMKN 1 Sokaraja", kab:"Banyumas", lat:-7.4470, lng:109.3140},
+    // Cilacap
+    {name:"SMKN 1 Cilacap", kab:"Cilacap", lat:-7.7290, lng:109.0210},
+    {name:"SMKN 2 Cilacap", kab:"Cilacap", lat:-7.7130, lng:109.0350},
+    {name:"SMKN 1 Kroya", kab:"Cilacap", lat:-7.6270, lng:109.2600},
+    // Semarang (Kota)
+    {name:"SMKN 7 Semarang", kab:"Kota Semarang", lat:-6.9938, lng:110.4087},
+    {name:"SMKN 2 Semarang", kab:"Kota Semarang", lat:-6.9897, lng:110.4295},
+    {name:"SMKN 4 Semarang", kab:"Kota Semarang", lat:-7.0089, lng:110.4017},
+    {name:"SMKN 8 Semarang", kab:"Kota Semarang", lat:-7.0246, lng:110.4077},
+    {name:"SMKN 11 Semarang", kab:"Kota Semarang", lat:-7.0384, lng:110.3946},
+    // Surakarta
+    {name:"SMKN 2 Surakarta", kab:"Kota Surakarta", lat:-7.5618, lng:110.8271},
+    {name:"SMKN 4 Surakarta", kab:"Kota Surakarta", lat:-7.5704, lng:110.8243},
+    {name:"SMKN 5 Surakarta", kab:"Kota Surakarta", lat:-7.5654, lng:110.8189},
+    // Klaten
+    {name:"SMKN 1 Klaten", kab:"Klaten", lat:-7.7020, lng:110.5960},
+    {name:"SMKN 2 Klaten", kab:"Klaten", lat:-7.7130, lng:110.6050},
+    {name:"SMKN 1 Prambanan", kab:"Klaten", lat:-7.7550, lng:110.4960},
+    // Brebes
+    {name:"SMKN 1 Brebes", kab:"Brebes", lat:-6.8710, lng:108.9280},
+    {name:"SMKN 1 Bumiayu", kab:"Brebes", lat:-7.2260, lng:108.9700},
+    // Pati
+    {name:"SMKN 1 Pati", kab:"Pati", lat:-6.7530, lng:111.0410},
+    {name:"SMKN 2 Pati", kab:"Pati", lat:-6.7650, lng:111.0320},
+    {name:"SMKN 1 Juwana", kab:"Pati", lat:-6.7220, lng:111.1520},
+    // Kudus
+    {name:"SMKN 1 Kudus", kab:"Kudus", lat:-6.8040, lng:110.8500},
+    {name:"SMKN 2 Kudus", kab:"Kudus", lat:-6.7920, lng:110.8620},
+    // Jepara
+    {name:"SMKN 1 Jepara", kab:"Jepara", lat:-6.5960, lng:110.6680},
+    {name:"SMKN 2 Jepara", kab:"Jepara", lat:-6.6120, lng:110.6580},
+    // Kendal
+    {name:"SMKN 1 Kendal", kab:"Kendal", lat:-6.9220, lng:110.2020},
+    {name:"SMKN 1 Rowosari", kab:"Kendal", lat:-6.9900, lng:110.1600},
+    // Demak
+    {name:"SMKN 1 Demak", kab:"Demak", lat:-6.8910, lng:110.6360},
+    {name:"SMKN 1 Mranggen", kab:"Demak", lat:-6.9820, lng:110.5400},
+    // Pemalang
+    {name:"SMKN 1 Pemalang", kab:"Pemalang", lat:-6.8930, lng:109.3850},
+    {name:"SMKN 2 Pemalang", kab:"Pemalang", lat:-6.9050, lng:109.3730},
+    // Tegal (Kota)
+    {name:"SMKN 1 Tegal", kab:"Kota Tegal", lat:-6.8670, lng:109.1380},
+    {name:"SMKN 2 Tegal", kab:"Kota Tegal", lat:-6.8580, lng:109.1280},
+    // Kebumen
+    {name:"SMKN 1 Kebumen", kab:"Kebumen", lat:-7.6680, lng:109.6560},
+    {name:"SMKN 1 Gombong", kab:"Kebumen", lat:-7.6120, lng:109.5150},
+    // Karanganyar
+    {name:"SMKN 1 Karanganyar", kab:"Karanganyar", lat:-7.5980, lng:111.0290},
+    {name:"SMKN 1 Gondangrejo", kab:"Karanganyar", lat:-7.5200, lng:110.9500},
+    // Boyolali
+    {name:"SMKN 1 Boyolali", kab:"Boyolali", lat:-7.5320, lng:110.5990},
+    {name:"SMKN 1 Banyudono", kab:"Boyolali", lat:-7.5200, lng:110.6700},
+    // Wonosobo
+    {name:"SMKN 1 Wonosobo", kab:"Wonosobo", lat:-7.3610, lng:109.9050},
+    {name:"SMKN 1 Kertek", kab:"Wonosobo", lat:-7.2900, lng:109.9550},
+    // Grobogan
+    {name:"SMKN 1 Purwodadi", kab:"Grobogan", lat:-7.0940, lng:110.9220},
+    {name:"SMKN 1 Geyer", kab:"Grobogan", lat:-7.2000, lng:110.9800},
+    // Salatiga
+    {name:"SMKN 1 Salatiga", kab:"Kota Salatiga", lat:-7.3300, lng:110.5070},
+    {name:"SMKN 2 Salatiga", kab:"Kota Salatiga", lat:-7.3420, lng:110.5180},
+    // Magelang (Kota)
+    {name:"SMKN 1 Magelang", kab:"Kota Magelang", lat:-7.4660, lng:110.2230},
+    {name:"SMKN 2 Magelang", kab:"Kota Magelang", lat:-7.4770, lng:110.2310},
+    // Wonogiri
+    {name:"SMKN 1 Wonogiri", kab:"Wonogiri", lat:-7.8240, lng:110.9250},
+    {name:"SMKN 1 Pracimantoro", kab:"Wonogiri", lat:-8.0300, lng:110.9100},
+    // Sragen
+    {name:"SMKN 1 Sragen", kab:"Sragen", lat:-7.4260, lng:111.0290},
+    {name:"SMKN 1 Kalijambe", kab:"Sragen", lat:-7.3600, lng:110.9500},
+    // Sukoharjo
+    {name:"SMKN 1 Sukoharjo", kab:"Sukoharjo", lat:-7.6880, lng:110.8400},
+    {name:"SMKN 1 Bendosari", kab:"Sukoharjo", lat:-7.7300, lng:110.8100},
+    // Rembang
+    {name:"SMKN 1 Rembang", kab:"Rembang", lat:-6.7100, lng:111.3470},
+    {name:"SMKN 1 Sale", kab:"Rembang", lat:-6.9000, lng:111.5000},
+    // Blora
+    {name:"SMKN 1 Blora", kab:"Blora", lat:-6.9750, lng:111.4170},
+    {name:"SMKN 1 Randublatung", kab:"Blora", lat:-7.0700, lng:111.4000},
+    // Pekalongan (Kota)
+    {name:"SMKN 1 Pekalongan", kab:"Kota Pekalongan", lat:-6.8900, lng:109.6790},
+    {name:"SMKN 3 Pekalongan", kab:"Kota Pekalongan", lat:-6.8810, lng:109.6660},
+    // Batang
+    {name:"SMKN 1 Batang", kab:"Batang", lat:-6.9110, lng:109.7370},
+    {name:"SMKN 1 Gringsing", kab:"Batang", lat:-6.9600, lng:110.0200},
+    // Temanggung
+    {name:"SMKN 1 Temanggung", kab:"Temanggung", lat:-7.3130, lng:110.1730},
+    {name:"SMKN 1 Jumo", kab:"Temanggung", lat:-7.2400, lng:110.2400},
+    // Purworejo
+    {name:"SMKN 1 Purworejo", kab:"Purworejo", lat:-7.7180, lng:110.0200},
+    {name:"SMKN 1 Kutoarjo", kab:"Purworejo", lat:-7.7260, lng:109.9170},
+    // Banjarnegara
+    {name:"SMKN 1 Banjarnegara", kab:"Banjarnegara", lat:-7.3910, lng:109.6970},
+    {name:"SMKN 1 Wanadadi", kab:"Banjarnegara", lat:-7.3500, lng:109.7200},
+    // Purbalingga
+    {name:"SMKN 1 Purbalingga", kab:"Purbalingga", lat:-7.3910, lng:109.3670},
+    {name:"SMKN 1 Bobotsari", kab:"Purbalingga", lat:-7.3200, lng:109.3250},
+    // Magelang (Kab)
+    {name:"SMKN 1 Mungkid", kab:"Magelang", lat:-7.5060, lng:110.2370},
+    {name:"SMKN 1 Sawangan", kab:"Magelang", lat:-7.5500, lng:110.1500},
+    // Semarang (Kab)
+    {name:"SMKN 1 Tengaran", kab:"Semarang", lat:-7.2500, lng:110.5000},
+    {name:"SMKN 1 Bancak", kab:"Semarang", lat:-7.1800, lng:110.6000},
+    // Pekalongan (Kab)
+    {name:"SMKN 1 Kajen", kab:"Pekalongan", lat:-7.0510, lng:109.6580},
+    {name:"SMKN 1 Kesesi", kab:"Pekalongan", lat:-7.0000, lng:109.5500},
+  ]
+};
+
+// ═══════════════════════════════════════════════════════════════
+// MAP INITIALIZATION
+// ═══════════════════════════════════════════════════════════════
+let mapInst = null;
+let kabCircles = {};
+let schoolMarkerLayers = {SD:[], SMP:[], SMA:[], SMK:[]};
+
+const SCHOOL_COLORS = {SD:'#7c3aed', SMP:'#2563eb', SMA:'#0ea5e9', SMK:'#16a34a'};
+
+function ratioColor(ratio) {
+  if (ratio <= 15) return '#22c55e';
+  if (ratio <= 20) return '#86efac';
+  if (ratio <= 25) return '#fbbf24';
+  if (ratio <= 30) return '#f97316';
+  return '#ef4444';
+}
+
+function initMap() {
+  if (mapInst) return;
+  mapInst = L.map('jatengMap', {
+    center: [-7.15, 110.0],
+    zoom: 8,
+    zoomControl: true,
+    scrollWheelZoom: false
+  });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
+    maxZoom: 18
+  }).addTo(mapInst);
+
+  // Build all markers — only dot icon, name appears in popup on click
+  Object.keys(SCHOOL_LOCATIONS).forEach(level => {
+    SCHOOL_LOCATIONS[level].forEach(sch => {
+      const col = SCHOOL_COLORS[level];
+
+      // Simple dot icon — NO label visible by default
+      const dotIcon = L.divIcon({
+        className: '',
+        html: `<div style="
+          width:11px;height:11px;border-radius:50%;
+          background:${col};border:2.5px solid white;
+          box-shadow:0 2px 6px rgba(0,0,0,.5);
+          cursor:pointer;
+          transition:transform .15s;
+        " onmouseover="this.style.transform='scale(1.5)'" onmouseout="this.style.transform='scale(1)'"></div>`,
+        iconSize: [11, 11],
+        iconAnchor: [5.5, 5.5],
+        popupAnchor: [0, -10],
+      });
+
+      const marker = L.marker([sch.lat, sch.lng], {icon: dotIcon})
+        .bindPopup(`
+          <div style="font-family:'DM Sans',sans-serif;min-width:170px;padding:2px">
+            <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">
+              <span style="width:12px;height:12px;border-radius:50%;background:${col};display:inline-block;flex-shrink:0;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,.3)"></span>
+              <strong style="font-size:13px;color:#1e293b;line-height:1.2">${sch.name}</strong>
+            </div>
+            <div style="font-size:11.5px;color:#64748b;margin-bottom:2px">Jenjang: <strong style="color:${col}">${level}</strong></div>
+            <div style="font-size:11.5px;color:#64748b">Wilayah: <strong style="color:#1e293b">${sch.kab}</strong></div>
+          </div>`, {maxWidth:230, closeButton:false});
+
+      schoolMarkerLayers[level].push(marker);
+      // Don't add to map yet — syncMapToLevel will handle visibility
+    });
+  });
+
+  updMapRatios();
+  // After ratios drawn, show markers for current active level
+  syncMapToLevel(curLevel);
+}
+
+// Show only markers matching the active jenjang level
+function syncMapToLevel(lv) {
+  if (!mapInst) return;
+  const allLevels = ['SD','SMP','SMA','SMK'];
+  allLevels.forEach(level => {
+    const show = (level === lv);
+    schoolMarkerLayers[level].forEach(m => {
+      if (show) {
+        m.addTo(mapInst);
+      } else {
+        m.remove();
+      }
+    });
+  });
+}
+
+function updMapRatios() {
+  if (!mapInst) return;
+  const d = D();
+
+  // Remove old circles
+  Object.values(kabCircles).forEach(c => c.remove());
+  kabCircles = {};
+
+  d.forEach(row => {
+    const coords = KAB_COORDS[row.kab];
+    if (!coords) return;
+    const ratio = row.mT / row.g;
+    const color = ratioColor(ratio);
+    const isIdeal = ratio <= 20;
+
+    const circle = L.circleMarker(coords, {
+      radius: 22,
+      fillColor: color,
+      color: isIdeal ? '#15803d' : '#b91c1c',
+      weight: 2,
+      fillOpacity: 0.72,
+    }).bindPopup(`
+      <div style="font-family:'DM Sans',sans-serif;min-width:190px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:6px">${row.kab}</div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+          <span style="color:#64748b">Rasio Murid/Guru</span>
+          <strong style="color:${color}">1 : ${ratio.toFixed(1)}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+          <span style="color:#64748b">Guru</span><strong>${fmt(row.g)}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+          <span style="color:#64748b">Murid</span><strong>${fmt(row.mT)}</strong>
+        </div>
+        <div style="margin-top:6px;padding:4px 8px;border-radius:6px;background:${isIdeal?'#dcfce7':'#fee2e2'};color:${isIdeal?'#15803d':'#b91c1c'};font-size:11px;font-weight:700;text-align:center">
+          ${isIdeal ? '✓ Rasio Ideal' : '⚠ Butuh Guru Tambahan'}
+        </div>
+      </div>
+    `, {maxWidth: 220}).addTo(mapInst);
+
+    // Label text
+    const label = L.divIcon({
+      className: '',
+      html: `<div style="font-family:Sora,sans-serif;font-size:10px;font-weight:800;color:white;text-shadow:0 1px 3px rgba(0,0,0,.7);text-align:center;pointer-events:none">${ratio.toFixed(0)}</div>`,
+      iconSize: [36, 16],
+      iconAnchor: [18, 8],
+    });
+    L.marker(coords, {icon: label, interactive: false}).addTo(mapInst);
+    kabCircles[row.kab] = circle;
+  });
+}
+
+function updateSchoolMarkers() {
+  // Legacy function — kept for compatibility, now delegates to syncMapToLevel
+  syncMapToLevel(curLevel);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PREDIKSI KEBUTUHAN GURU 2026/2027
+// ═══════════════════════════════════════════════════════════════
+let predChartInst = null;
+
+function getPredLevel() {
+  return document.getElementById('predLevel').value;
+}
+
+function linearPredict(vals) {
+  // Simple linear regression on years [0,1,2] → predict year 3
+  const n = vals.length;
+  const xMean = (n - 1) / 2;
+  const yMean = vals.reduce((a, b) => a + b, 0) / n;
+  let num = 0, den = 0;
+  vals.forEach((y, i) => { num += (i - xMean) * (y - yMean); den += (i - xMean) ** 2; });
+  const slope = den !== 0 ? num / den : 0;
+  return Math.max(0, Math.round(yMean + slope * (n - 1 - xMean + 1)));
+}
+
+function updPrediksi() {
+  const lv = getPredLevel();
+  const yrs = [2023, 2024, 2025];
+  const IDEAL_RATIO = 20;
+
+  // Build per-kab predictions
+  const kabNames = DB[lv][2025].map(r => r.kab);
+  const results = kabNames.map(kab => {
+    const muridVals = yrs.map(y => {
+      const row = DB[lv][y].find(r => r.kab === kab);
+      return row ? row.mT : null;
+    }).filter(v => v !== null);
+    const guruVals = yrs.map(y => {
+      const row = DB[lv][y].find(r => r.kab === kab);
+      return row ? row.g : null;
+    }).filter(v => v !== null);
+
+    const predMurid = linearPredict(muridVals);
+    const cur2025 = DB[lv][2025].find(r => r.kab === kab);
+    const guru2025 = cur2025 ? cur2025.g : 0;
+    const guruDibutuhkan = Math.ceil(predMurid / IDEAL_RATIO);
+    const delta = guruDibutuhkan - guru2025;
+    return { kab, predMurid, guru2025, guruDibutuhkan, delta };
+  });
+
+  // Summary cards
+  const totalGuru2025 = results.reduce((a, r) => a + r.guru2025, 0);
+  const totalGuruDibutuhkan = results.reduce((a, r) => a + r.guruDibutuhkan, 0);
+  const totalDelta = totalGuruDibutuhkan - totalGuru2025;
+  const totalPredMurid = results.reduce((a, r) => a + r.predMurid, 0);
+  const kabKurang = results.filter(r => r.delta > 0).length;
+
+  document.getElementById('predCards').innerHTML = `
+    <div class="kcard cb" style="padding:14px 16px;min-height:auto">
+      <p class="klabel" style="font-size:9px">Prediksi Murid 2026</p>
+      <p class="kval" style="font-size:1.5rem">${fmt(totalPredMurid)}</p>
+      <p class="ksub">Proyeksi seluruh Jawa Tengah</p>
+    </div>
+    <div class="kcard cv" style="padding:14px 16px;min-height:auto">
+      <p class="klabel" style="font-size:9px">Guru Saat Ini (2025)</p>
+      <p class="kval" style="font-size:1.5rem">${fmt(totalGuru2025)}</p>
+      <p class="ksub">Jumlah guru aktif</p>
+    </div>
+    <div class="kcard ca" style="padding:14px 16px;min-height:auto">
+      <p class="klabel" style="font-size:9px">Guru Dibutuhkan 2026</p>
+      <p class="kval" style="font-size:1.5rem">${fmt(totalGuruDibutuhkan)}</p>
+      <p class="ksub">Target rasio 1:${IDEAL_RATIO}</p>
+    </div>
+    <div class="kcard cr" style="padding:14px 16px;min-height:auto">
+      <p class="klabel" style="font-size:9px">Kebutuhan Tambahan</p>
+      <p class="kval" style="font-size:1.5rem">${totalDelta > 0 ? '+' : ''}${fmt(totalDelta)}</p>
+      <p class="ksub">${kabKurang} kab/kota butuh tambahan guru</p>
+    </div>
+  `;
+
+  // Prediction chart — top 15 by delta (need)
+  const top15 = [...results].sort((a,b) => b.delta - a.delta).slice(0, 15);
+  if (predChartInst) predChartInst.destroy();
+  predChartInst = new Chart(document.getElementById('predChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: top15.map(r => r.kab),
+      datasets: [
+        {
+          label: 'Guru 2025 (Aktual)',
+          data: top15.map(r => r.guru2025),
+          backgroundColor: '#3b82f6',
+          borderRadius: 5,
+          barPercentage: 0.7,
+        },
+        {
+          label: 'Guru Dibutuhkan 2026',
+          data: top15.map(r => r.guruDibutuhkan),
+          backgroundColor: top15.map(r => r.delta > 0 ? '#ef444466' : '#22c55e66'),
+          borderColor: top15.map(r => r.delta > 0 ? '#ef4444' : '#22c55e'),
+          borderWidth: 2,
+          borderRadius: 5,
+          barPercentage: 0.7,
+          type: 'bar',
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: {duration: 700, easing: 'easeOutQuart'},
+      interaction: {mode: 'index', intersect: false},
+      plugins: {
+        legend: {position: 'top', labels: {font: {family:'DM Sans', size:11}, boxWidth:12, padding:14}},
+        tooltip: {
+          callbacks: {
+            label: c => `  ${c.dataset.label}: ${fmt(c.raw)}`,
+            afterBody: ctx => {
+              const r = top15[ctx[0].dataIndex];
+              const sign = r.delta > 0 ? '+' : '';
+              return [`  Selisih: ${sign}${fmt(r.delta)} guru`, `  Prediksi Murid 2026: ${fmt(r.predMurid)}`];
+            }
+          }
+        }
+      },
+      scales: {
+        x: {grid:{color:'#f1f5f9'}, ticks:{font:{family:'DM Sans', size:10}, maxRotation:35}},
+        y: {grid:{color:'#f1f5f9'}, ticks:{font:{family:'DM Sans', size:11}, callback: v => v>=1000?Math.round(v/1000)+'rb':v}}
+      }
+    }
+  });
+
+  // Table
+  const sorted = [...results].sort((a,b) => b.delta - a.delta);
+  document.getElementById('predBody').innerHTML = sorted.map((r, i) => {
+    const sign = r.delta > 0 ? '+' : '';
+    const badge = r.delta > 100
+      ? `<span class="rbadge danger">⚠ Kurang ${fmt(r.delta)}</span>`
+      : r.delta > 0
+      ? `<span class="rbadge warn">↑ Perlu ${fmt(r.delta)}</span>`
+      : `<span class="rbadge ok">✓ Cukup</span>`;
+    return `
+      <tr class="border-b border-slate-50 ${i%2===0?'bg-white':'bg-slate-50/60'}">
+        <td class="px-4 py-2.5 font-semibold text-slate-700">${r.kab}</td>
+        <td class="px-3 py-2.5 text-right text-violet-700 font-medium">${fmt(r.guru2025)}</td>
+        <td class="px-3 py-2.5 text-right text-slate-600">${fmt(r.predMurid)}</td>
+        <td class="px-3 py-2.5 text-right font-bold text-slate-700">${fmt(r.guruDibutuhkan)}</td>
+        <td class="px-3 py-2.5 text-right font-bold" style="color:${r.delta>0?'#ef4444':'#22c55e'}">${sign}${fmt(r.delta)}</td>
+        <td class="px-3 py-2.5 text-right">${badge}</td>
+      </tr>`;
+  }).join('');
+}
+
+// Hook map init after DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    initMap();
+    updPrediksi();
+    // Ensure markers are synced with initial level (SMA default)
+    syncMapToLevel(curLevel);
+  }, 300);
+});
+
+// Hook into level/year changes to update map
+// Patch setLevel and setYear to also update map
+const _origSetLevel = setLevel;
+window.setLevel = function(l, btn) {
+  _origSetLevel(l, btn);
+  updMapRatios();
+  syncMapToLevel(l);
+  // Sync prediksi level select
+  const sel = document.getElementById('predLevel');
+  if (sel && ['SMA','SMK','SMP','SD'].includes(l)) sel.value = l;
+  updPrediksi();
+};
+const _origSetYear = setYear;
+window.setYear = function(y) {
+  _origSetYear(y);
+  updMapRatios();
+};
+
 </script>
 </body>
 </html>
