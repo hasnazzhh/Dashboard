@@ -538,7 +538,7 @@ thead th{position:sticky;top:0;z-index:5;}
   <section class="ccard fade-up" id="mapSection">
     <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
       <div>
-        <p class="ctitle">🗺️ Peta Rasio Murid/Guru — Jawa Tengah</p>
+        <p class="ctitle">🗺️ Peta Rasio Guru/Murid — Jawa Tengah</p>
         <p class="csub">Warna hijau = rasio ideal (1:15–1:20) · Warna merah = kekurangan guru · Klik wilayah untuk detail · Titik = lokasi sekolah</p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
@@ -1395,7 +1395,7 @@ function showRatio(kab, rowEl){
       labels:lbls,
       datasets:[
         {
-          label:'Rasio Aktual (Murid/Guru)',
+          label:'Rasio Aktual (Guru/Murid)',
           data:points.map(p=>p.rasio),
           borderColor:'#f59e0b',
           backgroundColor:'rgba(245,158,11,.10)',
