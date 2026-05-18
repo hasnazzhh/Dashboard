@@ -2269,7 +2269,7 @@ window.setLevel = function(l, btn) {
   syncMapToLevel(l);
   // Sync prediksi level select
   const sel = document.getElementById('predLevel');
-  if (sel && ['SMA','SMK','SMP','SD'a].includes(l)) sel.value = l;
+  if (sel && ['SMA','SMK','SMP','SD'].includes(l)) sel.value = l;
   updPrediksi();
 };
 const _origSetYear = setYear;
