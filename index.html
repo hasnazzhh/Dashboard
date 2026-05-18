@@ -3,14 +3,46 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Dashboard Statistik Pendidikan Jawa Tengah</title>
+<title>EduRatio Jateng Dashboard</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
-:root{--bg:#bdf1ef;}
+:root{
+  /* === DASHBOARD BG: warm slate-blue, bukan hijau/putih === */
+  --bg:        #68ccda;   /* biru-abu sejuk untuk area luar */
+  --bg-mid:    #cfdcee;   /* sedikit lebih gelap, aksen section */
+
+  /* === CARD: putih bersih tapi hangat, kontras terhadap bg === */
+  --card:      #ffffff;
+  --card-alt:  #f4f7fb;   /* card sekunder, tabel, mstat */
+  --card-hov:  #eef3fa;   /* hover state */
+
+  /* === BORDER === */
+  --border:    #dce6f2;
+  --border-md: #c8d8ec;
+
+  /* === TEXT === */
+  --text-main: #000000;
+  --text-sub:  #29333a;
+  --text-muted:#061c33;
+
+  /* === ACCENT (dipakai sparingly) === */
+  --accent:    #2563eb;
+}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:#87a2ce;min-height:100vh;}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--bg);
+  color:var(--text-main);
+  min-height:100vh;
+  transition:background .3s;
+  /* subtle diagonal pattern on body bg */
+  background-image:
+    radial-gradient(circle at 20% 80%, rgba(99,155,255,.08) 0%, transparent 55%),
+    radial-gradient(circle at 80% 10%, rgba(139,92,246,.06) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(56,189,248,.05) 0%, transparent 60%);
+}
 
 @keyframes fadeUp  {from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes popIn   {from{opacity:0;transform:scale(.86)}to{opacity:1;transform:scale(1)}}
@@ -26,15 +58,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:#87a2ce;min-hei
 .dot-bg{position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle,rgba(255,255,255,.06) 1px,transparent 1px);background-size:26px 26px;}
 
 /* Filter bar */
-.fbar{background:white;border-bottom:2px solid #e2e8f0;position:sticky;top:0;z-index:40;box-shadow:0 2px 14px rgba(0,0,0,.07);}
-.fbtn{display:inline-flex;align-items:center;gap:6px;padding:7px 18px;border-radius:99px;border:2px solid #e2e8f0;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;background:white;color:#475569;font-family:'DM Sans',sans-serif;white-space:nowrap;}
-.fbtn:hover{border-color:#94a3b8;color:#1e293b;}
-.fbtn.on{border-color:transparent;color:white;box-shadow:0 4px 14px rgba(0,0,0,.2);}
-.smp.on{background:linear-gradient(135deg,#f3f717,#ff951b);}
-.sma.on{background:linear-gradient(135deg,#ffb8a6,#df2b2b);}
-.sd.on{background:linear-gradient(135deg,#d81dd8,#f1c1dd);}
-.smk.on{background:linear-gradient(135deg,#d81dd8,#f1c1dd);}
-.ysel{padding:7px 30px 7px 12px;border-radius:12px;border:2px solid #e2e8f0;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;background:white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;color:#1e293b;cursor:pointer;outline:none;appearance:none;transition:border-color .2s;}
+.fbar{background:var(--card);border-bottom:1.5px solid var(--border-md);position:sticky;top:0;z-index:40;box-shadow:0 3px 18px rgba(30,60,120,.09);}
+.fbtn{display:inline-flex;align-items:center;gap:6px;padding:7px 18px;border-radius:99px;border:1.5px solid var(--border-md);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;background:var(--card-alt);color:var(--text-sub);font-family:'DM Sans',sans-serif;white-space:nowrap;}
+.fbtn:hover{border-color:#93b4d4;color:var(--text-main);background:var(--card);}
+.fbtn.on{border-color:transparent;color:rgb(243, 232, 255);box-shadow:0 4px 14px rgba(0,0,0,.2);}
+.smp.on{background:linear-gradient(135deg,#0891b2,#0e7490);}
+.sma.on{background:linear-gradient(135deg,#1d4ed8,#3b82f6);}
+.sd.on{background:linear-gradient(135deg,#059669,#10b981);}
+.smk.on{background:linear-gradient(135deg,#7c3aed,#a78bfa);}
+.ysel{padding:7px 30px 7px 12px;border-radius:12px;border:1.5px solid var(--border-md);font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;background:var(--card-alt) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%238098b0' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;color:var(--text-main);cursor:pointer;outline:none;appearance:none;transition:border-color .2s;}
 .ysel:focus{border-color:#3b82f6;}
 
 /* KPI cards */
@@ -51,44 +83,44 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:#87a2ce;min-hei
 .ksub{font-size:11px;color:rgba(255,255,255,.72);}
 
 /* Chart cards */
-.ccard{background:white;border-radius:20px;box-shadow:0 2px 18px rgba(0,0,0,.07);padding:22px;}
-.ctitle{font-family:'Sora',sans-serif;font-weight:700;font-size:15px;color:#1e293b;}
-.csub{font-size:11.5px;color:#94a3b8;margin-top:2px;}
+.ccard{background:var(--card);border-radius:20px;box-shadow:0 2px 16px rgba(30,60,120,.08),0 1px 3px rgba(30,60,120,.05);padding:22px;border:1px solid var(--border);}
+.ctitle{font-family:'Sora',sans-serif;font-weight:700;font-size:15px;color:var(--text-main);letter-spacing:-.01em;}
+.csub{font-size:11.5px;color:var(--text-muted);margin-top:2px;line-height:1.5;}
 
 /* Table */
-.tscroll{max-height:400px;overflow-y:auto;border-radius:14px;border:1px solid #e2e8f0;}
+.tscroll{max-height:400px;overflow-y:auto;border-radius:14px;border:1px solid var(--border-md);}
 .tscroll::-webkit-scrollbar{width:5px;}
-.tscroll::-webkit-scrollbar-track{background:#f8fafc;}
-.tscroll::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px;}
+.tscroll::-webkit-scrollbar-track{background:var(--card-alt);}
+.tscroll::-webkit-scrollbar-thumb{background:#aac0d8;border-radius:3px;}
 thead th{position:sticky;top:0;z-index:5;}
-.drow:hover{background:#f0f7ff;}
+.drow:hover{background:var(--card-hov);}
 
 /* Chips */
 .chip{display:inline-flex;align-items:center;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:600;}
 .tsma{background:#dbeafe;color:#1d4ed8;}
-.tsmk{background:#cffafe;color:#0e7490;}
-.tsmp{background:#cffafe;color:#0e7490;}
+.tsmk{background:#e0f2fe;color:#0369a1;}
+.tsmp{background:#e0f2fe;color:#0369a1;}
 .tsd{background:#dbeafe;color:#1d4ed8;}
 .treal{background:#dcfce7;color:#15803d;}
 .tsim{background:#fef9c3;color:#a16207;}
 
 /* Level pill */
 .lpill{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:99px;font-size:12px;font-weight:700;background:rgba(255,255,255,.14);backdrop-filter:blur(6px);color:white;border:1.5px solid rgba(255,255,255,.22);}
-.sbox{border:2px solid #e2e8f0;border-radius:12px;padding:8px 12px 8px 36px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:210px;transition:border-color .2s;}
+.sbox{border:1.5px solid var(--border-md);border-radius:12px;padding:8px 12px 8px 36px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:210px;transition:border-color .2s;background:var(--card-alt);color:var(--text-main);}
 .sbox:focus{border-color:#3b82f6;}
 
 /* Segmented toggle for chart type */
-.seg{display:inline-flex;background:#f1f5f9;border-radius:12px;padding:3px;gap:2px;}
-.segs{padding:5px 12px;border-radius:9px;font-size:12px;font-weight:600;cursor:pointer;color:#64748b;transition:all .2s;border:none;background:transparent;font-family:'DM Sans',sans-serif;}
-.segs.on{background:white;color:#1e293b;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+.seg{display:inline-flex;background:var(--bg);border-radius:12px;padding:3px;gap:2px;border:1px solid var(--border);}
+.segs{padding:5px 12px;border-radius:9px;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-sub);transition:all .2s;border:none;background:transparent;font-family:'DM Sans',sans-serif;}
+.segs.on{background:var(--card);color:var(--text-main);box-shadow:0 2px 10px rgba(30,60,120,.12);}
 
 /* Clickable table rows */
 .drow{cursor:pointer;}
-.drow.selected{background:#eff6ff !important;outline:2px solid #3b82f6;outline-offset:-2px;}
+.drow.selected{background:#e0ecff !important;outline:2px solid #3b82f6;outline-offset:-2px;}
 .drow td:first-child{position:relative;padding-left:36px !important;}
 .drow td:first-child::before{content:'▶';position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:8px;color:#cbd5e1;transition:color .2s;}
 .drow.selected td:first-child::before{color:#3b82f6;}
-.drow:hover td:first-child::before{color:#94a3b8;}
+.drow:hover td:first-child::before{color:var(--text-muted);}
 
 /* Ratio panel */
 @keyframes slideDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
@@ -101,9 +133,114 @@ thead th{position:sticky;top:0;z-index:5;}
 .rbadge.danger{background:#fee2e2;color:#b91c1c;}
 
 /* Mini stat boxes inside ratio panel */
-.mstat{background:#f8fafc;border-radius:14px;padding:12px 16px;border:1.5px solid #e2e8f0;flex:1;}
-.mstat-val{font-family:'Sora',sans-serif;font-size:1.35rem;font-weight:800;color:#1e293b;}
-.mstat-lbl{font-size:10.5px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-top:3px;}
+.mstat{background:var(--card-alt);border-radius:14px;padding:12px 16px;border:1.5px solid var(--border);flex:1;}
+.mstat-val{font-family:'Sora',sans-serif;font-size:1.35rem;font-weight:800;color:var(--text-main);}
+.mstat-lbl{font-size:10.5px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-top:3px;}
+
+/* ════ QUOTE BLOCK ════ */
+@keyframes quoteReveal {
+  from { opacity:0; transform:translateY(28px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+.quote-block {
+  position: relative;
+  background: linear-gradient(145deg, #1c2b3a 0%, #243447 60%, #1e3252 100%);
+  border: 1px solid rgba(100,150,210,.18);
+  border-radius: 24px;
+  padding: 52px 60px 42px;
+  text-align: center;
+  overflow: hidden;
+  box-shadow: 0 12px 48px rgba(15,30,60,.22), 0 2px 8px rgba(15,30,60,.12);
+  animation: quoteReveal .7s ease both;
+}
+
+/* Soft radial glow in center */
+.quote-block::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 65% 55% at 50% 35%, rgba(99,155,255,.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Dot pattern bg */
+.quote-block::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(120,160,255,.1) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+.quote-mark {
+  font-family: 'Sora', serif;
+  font-size: 7rem;
+  line-height: .7;
+  color: rgba(147,197,255,.22);
+  user-select: none;
+  margin-bottom: -12px;
+  position: relative;
+  z-index: 1;
+}
+
+.quote-text {
+  font-family: 'Sora', sans-serif;
+  font-size: 1.13rem;
+  font-weight: 600;
+  line-height: 1.75;
+  color: #e2ecf8;
+  max-width: 720px;
+  margin: 0 auto 24px;
+  position: relative;
+  z-index: 1;
+  letter-spacing: .01em;
+  font-style: italic;
+}
+
+.quote-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 18px;
+  position: relative;
+  z-index: 1;
+}
+
+.quote-line {
+  flex: 1;
+  max-width: 80px;
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent, rgba(147,197,255,.4), transparent);
+  border-radius: 1px;
+}
+
+.quote-attr {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(147,197,255,.55);
+  white-space: nowrap;
+}
+
+.quote-icons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: rgba(147,197,255,.5);
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 640px) {
+  .quote-block { padding: 32px 24px 28px; }
+  .quote-text  { font-size: .98rem; }
+  .quote-mark  { font-size: 5rem; }
+}
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -125,7 +262,7 @@ thead th{position:sticky;top:0;z-index:5;}
         </svg>
       </div>
       <div>
-        <h1 style="font-family:'Sora',sans-serif;" class="font-extrabold text-[1.6rem] tracking-tight leading-snug">Dashboard Statistik Pendidikan</h1>
+        <h1 style="font-family:'Sora',sans-serif;" class="font-extrabold text-[1.6rem] tracking-tight leading-snug">EduRatio Jateng Dashboard</h1>
         <p class="text-blue-200 text-sm mt-0.5 font-medium">Provinsi Jawa Tengah &nbsp;·&nbsp; SD, SMP &amp; SMA/SMK</p>
       </div>
     </div>
@@ -376,7 +513,7 @@ thead th{position:sticky;top:0;z-index:5;}
       <span class="flex items-center gap-1.5 font-semibold"><span class="inline-block w-4 h-4 rounded" style="background:#f97316"></span>25–30 (Melebihi)</span>
       <span class="flex items-center gap-1.5 font-semibold"><span class="inline-block w-4 h-4 rounded" style="background:#ef4444"></span>&gt; 30 (Kritis)</span>
     </div>
-    <div id="jatengMap" style="height:480px;border-radius:14px;border:2px solid #e2e8f0;overflow:hidden;"></div>
+    <div id="jatengMap" style="height:480px;border-radius:14px;border:1.5px solid var(--border-md);overflow:hidden;"></div>
     <div class="mt-3 flex flex-wrap gap-3 text-xs text-slate-500">
       <span>🟣 <strong>SD</strong> &nbsp;|&nbsp; 🔵 <strong>SMP</strong> &nbsp;|&nbsp; 🔷 <strong>SMA</strong> &nbsp;|&nbsp; 🟢 <strong>SMK</strong> &nbsp;·&nbsp; Titik sekolah menyesuaikan filter jenjang yang dipilih · <strong>Klik titik untuk detail nama sekolah</strong></span>
     </div>
@@ -421,9 +558,38 @@ thead th{position:sticky;top:0;z-index:5;}
     </div>
   </section>
 </main>
-<footer class="max-w-7xl mx-auto px-5 pb-8 text-center text-xs text-slate-400 mt-2">
+
+<!-- ════════════════════════ QUOTE SECTION ════════ -->
+<section class="max-w-7xl mx-auto px-4 md:px-5 pb-2 mt-2">
+  <div class="quote-block">
+    <!-- Decorative large quote mark -->
+    <div class="quote-mark">"</div>
+    <!-- Quote text -->
+    <blockquote class="quote-text">
+      “The future belongs to those who believe in the beauty of their dreams, and quality education begins with a balanced teacher-student ratio.” -Someone.
+    </blockquote>
+    <!-- Decorative line + attribution -->
+    <div class="quote-footer">
+      <div class="quote-line"></div>
+      <span class="quote-attr">Refleksi Data Pendidikan · Jawa Tengah</span>
+      <div class="quote-line"></div>
+    </div>
+    <!-- Subtle icon row -->
+    <div class="quote-icons">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".45"><path d="M12 14l9-5-9-5-9 5 9 5zm0 0v6"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".45"><path d="M17 20h5v-2a4 4 0 00-5.196-3.78M9 20H4v-2a4 4 0 015.196-3.78M15 11a4 4 0 10-8 0 4 4 0 008 0z"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".45"><path d="M9 12h6m-3-3v6M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    </div>
+  </div>
+</section>
+
+<footer class="max-w-7xl mx-auto px-10 pb-15 text-center text-xs mt-2" style="color:var(--text-muted)">
+  Made by ❤️
+  Our team : Adelia, Firda, Hasna`, Rinka, Irkham
+<footer class="max-w-7xl mx-auto px-5 pb-8 text-center text-xs mt-2" style="color:var(--text-muted)">
   Sumber: Kemdikbud / Kemendikdasmen RI · Jawa Tengah 2023–2025 · Dashboard v4.0 · Peta Rasio + Prediksi Guru
 </footer>
+
 
 <script>
 // ═══════════════════════════════════════════════════════
@@ -1848,10 +2014,10 @@ function initMap() {
           <div style="font-family:'DM Sans',sans-serif;min-width:170px;padding:2px">
             <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">
               <span style="width:12px;height:12px;border-radius:50%;background:${col};display:inline-block;flex-shrink:0;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,.3)"></span>
-              <strong style="font-size:13px;color:#1e293b;line-height:1.2">${sch.name}</strong>
+              <strong style="font-size:13px;color:var(--text-main);line-height:1.2">${sch.name}</strong>
             </div>
-            <div style="font-size:11.5px;color:#64748b;margin-bottom:2px">Jenjang: <strong style="color:${col}">${level}</strong></div>
-            <div style="font-size:11.5px;color:#64748b">Wilayah: <strong style="color:#1e293b">${sch.kab}</strong></div>
+            <div style="font-size:11.5px;color:var(--text-sub);margin-bottom:2px">Jenjang: <strong style="color:${col}">${level}</strong></div>
+            <div style="font-size:11.5px;color:var(--text-sub)">Wilayah: <strong style="color:#1e293b">${sch.kab}</strong></div>
           </div>`, {maxWidth:230, closeButton:false});
 
       schoolMarkerLayers[level].push(marker);
@@ -1905,14 +2071,14 @@ function updMapRatios() {
       <div style="font-family:'DM Sans',sans-serif;min-width:190px">
         <div style="font-weight:700;font-size:14px;margin-bottom:6px">${row.kab}</div>
         <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
-          <span style="color:#64748b">Rasio Murid/Guru</span>
+          <span style="color:var(--text-sub)">Rasio Murid/Guru</span>
           <strong style="color:${color}">1 : ${ratio.toFixed(1)}</strong>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
-          <span style="color:#64748b">Guru</span><strong>${fmt(row.g)}</strong>
+          <span style="color:var(--text-sub)">Guru</span><strong>${fmt(row.g)}</strong>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
-          <span style="color:#64748b">Murid</span><strong>${fmt(row.mT)}</strong>
+          <span style="color:var(--text-sub)">Murid</span><strong>${fmt(row.mT)}</strong>
         </div>
         <div style="margin-top:6px;padding:4px 8px;border-radius:6px;background:${isIdeal?'#dcfce7':'#fee2e2'};color:${isIdeal?'#15803d':'#b91c1c'};font-size:11px;font-weight:700;text-align:center">
           ${isIdeal ? '✓ Rasio Ideal' : '⚠ Butuh Guru Tambahan'}
@@ -2103,7 +2269,7 @@ window.setLevel = function(l, btn) {
   syncMapToLevel(l);
   // Sync prediksi level select
   const sel = document.getElementById('predLevel');
-  if (sel && ['SMA','SMK','SMP','SD'].includes(l)) sel.value = l;
+  if (sel && ['SMA','SMK','SMP','SD'a].includes(l)) sel.value = l;
   updPrediksi();
 };
 const _origSetYear = setYear;
